@@ -1,0 +1,621 @@
+## Input Data #################################################################
+
+@source
+articles(
+    @key
+    @distributed_by
+    id text,
+    @searchable
+    title text,
+    @searchable
+    content text,
+    full_html text,
+    index_html text,
+    numerical_symbol text,
+    #change date to text
+    public_day date,
+    #change date to text
+    day_report date,
+    article_type text, 
+    source text,
+    agency_issued text,
+    the_signer text,
+    signer_title text,
+    scope text,
+    #change date to string
+    effect_day date,
+    effect_status text,
+    count_click int,
+    created_at date,
+    updated_at date
+).
+
+@source
+phrases(
+    @key
+    doc_id text,
+    phrases text,
+    pos_tag text[]
+).
+
+######################
+@extraction
+parts(
+    @key
+    @distributed_by
+    # XXX This breaks the search index.  @source should not be derived from another @source
+    @references(relation="articles", column="id")
+    law_id         text,
+    totalPart       int,
+    part_index      int,
+    part_start      int,
+    part_end        int,
+    name_part       text
+).
+
+function extract_parts over(
+    id text,
+    content text
+)   returns rows like parts
+        implementation "udf/extract_parts.py" handles tsv lines.
+
+parts += extract_parts(id, content) :- articles(id,_, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_).
+
+###############################################    
+@extraction
+chapters(
+    @key
+    @distributed_by
+    @references(relation="articles", column="id")
+    law_id         text,
+    @references(relation="parts",column="part_index")
+    part_index      int,
+    totalChap       int,
+    chap_index      int,
+    chap_start      int,
+    chap_end        int,
+    chap_name       text
+).
+function extract_chapters over(
+    id text,
+    content text,
+    part_index int,
+    part_start int,
+    part_end int
+)   returns rows like chapters
+        implementation "udf/extract_chapters.py" handles tsv lines.
+
+chapters += extract_chapters(id, content,part_index,part_start,part_end) :- articles(id,_, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_),parts(id,_,part_index,part_start,part_end,_).
+
+################################
+@extraction
+sections(
+    @key
+    @distributed_by
+    # XXX This breaks the search index.  @source should not be derived from another @source
+    @references(relation="articles", column="id")
+    law_id         text,
+    @references(relation="chapters",column="chap_index")
+    part_index      int,
+    chap_index      int,
+    totalSec       int,
+    sec_index      int,
+    sec_start      int,
+    sec_end        int,
+    sec_name        text
+).
+function extract_sections over(
+    id text,
+    content text,
+    part_index      int,
+    chap_index int,
+    chap_start int,
+    chap_end int
+)   returns rows like chapters
+        implementation "udf/extract_sections.py" handles tsv lines.
+
+sections += extract_sections(id, content,part_index,chap_index,chap_start,chap_end) :- articles(id, _,content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_),chapters(id,part_index,_,chap_index,chap_start,chap_end,_).
+
+################################
+@extraction
+laws(
+    @key
+    @distributed_by
+    # XXX This breaks the search index.  @source should not be derived from another @source
+    @references(relation="articles", column="id")
+    law_id         text,
+    part_index      int,
+    chap_index      int,
+    sec_index      int,
+    totalLaw      int,
+    law_index      int,
+    law_start      int,
+    law_end        int,
+    law_name       text,
+    law_content     text,
+    title_end   int
+).
+function extract_laws over(
+    id text,
+    content text,
+    part_index int,
+    chap_index int,
+    sec_index int,
+    sec_start int,
+    sec_end int
+)   returns rows like laws
+        implementation "udf/extract_laws.py" handles tsv lines.
+
+laws += extract_laws(id, content,part_index,chap_index,sec_index,sec_start,sec_end) :- articles(id, _, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_),sections(id,part_index,chap_index,_,sec_index,sec_start,sec_end,_).
+##########################
+@extraction
+items(
+    @key
+    @distributed_by
+    # XXX This breaks the search index.  @source should not be derived from another @source
+    @references(relation="articles", column="id")
+    law_id         text,
+    part_index      int,
+    chap_index      int,
+    sec_index      int,
+    law_index      int,
+    totalItem      int,
+    item_index      int, 
+    item_start      int,
+    item_end        int,
+    item_name       text,
+    item_content         text,
+    title_end   int
+).
+function extract_items over(
+    id text,
+    content text,
+    part_index int,
+    chap_index int,
+    sec_index int,
+    law_index int,
+    law_start int,
+    law_end int
+)   returns rows like items
+        implementation "udf/extract_items.py" handles tsv lines.
+
+items += extract_items(id, content,part_index,chap_index,sec_index, law_index, law_start, law_end) :-  laws(id, part_index, chap_index, sec_index, _, law_index, law_start, law_end, _, content,_).
+###########################
+@extraction
+points(
+    @key
+    @distributed_by
+    # XXX This breaks the search index.  @source should not be derived from another @source
+    @references(relation="articles", column="id")
+    law_id         text,
+    part_index      int,
+    chap_index      int,
+    sec_index      int,
+    law_index      int,
+    item_index      int,
+    totalPoint      int,
+    point_index      int,
+    point_start      int,
+    point_end        int,
+    point_name       text,
+    point_content         text
+).
+function extract_points over(
+    id text,
+    content text,
+    part_index int,
+    chap_index int,
+    sec_index int,
+    law_index int,
+    item_index int,
+    item_start int,
+    item_end int
+)   returns rows like points
+        implementation "udf/extract_points.py" handles tsv lines.
+
+points += extract_points(id, content,part_index,chap_index,sec_index, law_index, item_index, item_start, item_end) :- items(id, part_index, chap_index, sec_index, law_index, totalItem, item_index,item_start, item_end, _, content,_),
+[totalItem > 0].
+##########################
+@extraction
+header_doc(
+    @key   
+    @references(relation="articles", column="id", alias="articles")
+    doc_id         text,
+    header_text   text
+).
+
+function extract_header_doc over(
+    doc_id text,
+    content text
+)   returns rows like header_doc
+        implementation "udf/extract_header_doc.py" handles tsv lines.
+
+header_doc += extract_header_doc(doc_id,content) :- articles(doc_id, _,content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_).
+
+##############################################################
+##      Sua doi bo sung     ###
+## Nhung van ban co sua doi bo sung
+law_has_modification(
+    @key
+    @references(relation="articles", column="id", alias="articles")
+    doc_id  text,
+    modyfied_doc_id text,
+    modyfied_doc_released_date text
+).
+
+function extract_law_has_modification over(
+    doc_id  text,
+    header_text text,
+    title text
+)   returns rows like law_has_modification
+        implementation "udf/extract_law_has_modification.py" handles tsv lines.
+law_has_modification += extract_law_has_modification(doc_id,header_text,title):-header_doc(doc_id,header_text),
+articles(doc_id, title,_,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_).
+
+
+type_modify_law(
+    @key
+    @references(relation="articles",column ="id",alias="articles")
+    law_id text,
+    type int, 
+    doc_content_update text,
+    numerical_symbol text,
+    position text,
+    modified_law_date_release text
+).
+#type = 1 : sua doi dieu da co
+#type = 2 : loai bo
+#type = 3: bo sung cum tu
+#type = 4: thay cum tu ... bang cum tu ...
+#type = 5: ten cua ... sua doi bo sung thanh ...
+#type = 6: sua doi ten
+#type = 7 : bo cum tu
+#type = 8: them dieu vao ...
+#type = 9: them dieu vao sau ...
+#type = 10: them dieu vao truoc ...
+
+function extract_type_modify_law over(
+    law_id text,
+    totalLaw text,
+    law_content text,
+    law_len int,
+    totalItem int,
+    item_content text,
+    item_len int,
+    totalpoint int,
+    point_content text,
+    part_index int,
+    chap_index int,
+    sec_index int,
+    law_index int,
+    item_index int,
+    point_index int,
+    symbol text,
+    date text
+)   returns rows like type_modify_law
+       implementation "udf/extract_type_modify_law.py" handles tsv lines.
+
+type_modify_law += extract_type_modify_law(law_id,totalLaw,law_content,abs(law_end-law_start) ,0,NULL,0 ,0,NULL,part_index,chap_index ,sec_index ,law_index ,0 ,0,symbol,released_date):-laws(law_id, part_index, chap_index, sec_index,totalLaw, law_index,law_start ,_,_,law_content,law_end),law_has_modification(law_id,symbol,released_date).
+
+type_modify_law += extract_type_modify_law(law_id,0,NULL,0 ,totalItem,item_content,abs(item_end-item_start)  ,0,NULL,part_index,chap_index ,sec_index ,law_index ,item_index ,0,symbol,released_date):-items(law_id,part_index,chap_index,sec_index,law_index,totalItem,item_index,item_start,_,_,item_content,item_end), law_has_modification(law_id,symbol,released_date),[totalItem>0].
+
+type_modify_law += extract_type_modify_law(law_id,0,NULL,0 ,0,NULL,0  ,totalpoint,point_content,part_index,chap_index ,sec_index ,law_index ,item_index ,point_index,symbol,released_date):-points(law_id,part_index,chap_index,sec_index,law_index,item_index,totalpoint,point_index,_,_,_,point_content), law_has_modification(law_id,symbol,released_date),[totalpoint>0].
+############
+@extraction
+extract_modify(
+    law_id text,
+    position text,
+    type int,
+    part_modify_name text,
+    chap_modify_name text,
+    sec_modify_name text,
+    law_modify_name text,
+    item_modify_name text,
+    point_modify_name text,
+    text_delete text, ## cụm từ cần bãi bỏ
+    from_text text, ##từ,cum từ cần đổi
+    to_text text, ##từ,cụm từ thay thế
+    numerical_symbol text,
+    released_date text
+).
+
+#mode_modify = 1 : bo sung sua doi
+#mode_modify = 2 : bo sung
+
+function extract_modify_law over(
+    law_id text,
+    type int, 
+    doc_content_update text,
+    numerical_symbol text,
+    position text,
+    released_date text
+    ) returns rows like extract_modify
+        implementation "udf/extract_modify.py" handles tsv lines.
+extract_modify += extract_modify_law(law_id ,type , doc_content_update ,numerical_symbol,position, released_date):-type_modify_law(law_id ,type , doc_content_update , numerical_symbol,position, released_date).
+############################################
+link_modify_articles(
+    @key
+    @references(relation="articles", column="id", alias="articles")
+    law_id text,
+    position text,
+    modify_doc_id text
+).
+function extract_link_modify_articles over(
+    doc_id text,
+    position text,
+    modify_title text,
+    released_date text,
+    doc_id_resources text[],
+    doc_title_resources text[],
+    doc_symbol_resources text[],
+    type text[],
+    released_date_resources date[]
+    )   returns rows like link_modify_articles
+        implementation "udf/extract_link_modify_articles.py" handles tsv lines.
+link_modify_articles += extract_link_modify_articles(doc_id,position,modify_title,released_date,ARRAY_AGG(doc_id_resources),
+ARRAY_AGG(doc_title_resources),ARRAY_AGG(doc_symbol_resources),ARRAY_AGG(type),ARRAY_AGG(public_date)) :-  articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_),extract_modify(
+    doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources].
+###################
+index_modify_positions(
+    @key
+    @references(relation="articles", column="id", alias="articles")
+    law_id text,
+    position text,
+    @references(relation="articles", column="id", alias="articles")
+    modified_law_id text,
+    part_modify_index int,
+    chap_modify_index int,
+    sec_modify_index int,
+    law_modify_index int,
+    item_modify_index int,
+    point_modify_index int,
+    correct boolean
+).
+function extract_index_modify_position over(
+    law_id text,
+    position text,
+    modified_law_id text,
+    part_modify_name text,
+    chap_modify_name text,
+    sec_modify_name text,
+    law_modify_name text,
+    item_modify_name text,
+    point_modify_name text,
+    part_name_sources text[],
+    part_index_sources int[],
+    chap_name_sources text[],
+    chap_index_sources int[],
+    sec_name_sources text[],
+    sec_index_sources int[],
+    law_name_sources text[],
+    law_index_sources int[],
+    item_name_sources text[],
+    item_index_sources int[],
+    point_name_sources text[],
+    point_index_sources int[]
+    )   returns rows like index_modify_positions
+        implementation "udf/extract_index_modify_position.py" handles tsv lines.
+index_modify_positions += extract_index_modify_position(law_id , position , modified_law_id , part_modify_name , chap_modify_name , sec_modify_name , law_modify_name , item_modify_name , point_modify_name, ARRAY_AGG(part_name_sources) , ARRAY_AGG(part_index_sources) , ARRAY_AGG(chap_name_sources), ARRAY_AGG(chap_index_sources), ARRAY_AGG(sec_name_sources), ARRAY_AGG(sec_index_sources), ARRAY_AGG(law_name_sources), ARRAY_AGG(law_index_sources), ARRAY_AGG(item_name_sources), ARRAY_AGG(item_index_sources), ARRAY_AGG(point_name_sources), ARRAY_AGG(point_index_sources)) :- 
+link_modify_articles(law_id, position, modified_law_id),
+extract_modify(law_id, position , _, part_modify_name, chap_modify_name, sec_modify_name, law_modify_name, item_modify_name, point_modify_name, _, _, _, _,_), 
+parts(modified_law_id, _, part_index_sources, _, _, part_name_sources),
+chapters(modified_law_id, part_index_sources,_,chap_index_sources, _, _, chap_name_sources),
+sections(modified_law_id, part_index_sources, chap_index_sources, _,sec_index_sources, _, _, sec_name_sources),
+laws(modified_law_id, part_index_sources, chap_index_sources, sec_index_sources, _, law_index_sources, _, _, law_name_sources, _,_),
+items(modified_law_id, part_index_sources, chap_index_sources, sec_index_sources, law_index_sources, _, item_index_sources, _, _, item_name_sources, _,_),
+points( modified_law_id, part_index_sources, chap_index_sources, sec_index_sources, law_index_sources, item_index_sources, _, point_index_sources, _, _, point_name_sources, _),
+[modified_law_id != "NA"].
+
+##############################################
+
+
+@extraction
+content_phrases(
+    @key
+    doc_id text,
+    @searchable
+    content text
+).
+function extract_content over(
+    doc_id text,
+    content text,
+    phrases text[]
+)   returns rows like content_phrases
+        implementation "udf/extract_content.py" handles tsv lines.
+content_phrases += extract_content(doc_id,content, ARRAY_AGG(phrases)) :- phrases(doc_id,phrases,_),articles(doc_id,_, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_).
+## NLP markup #################################################################
+@extraction
+sentence(
+    law_id  text,
+    position text,
+    sentence_index int,
+    sentence_text text,
+    tokens text[],
+    pos_tags text[]
+).
+
+function extract_sentences over (
+    id          text,
+    content     text,
+    part_index  int,
+    chap_index  int,
+    sec_index   int,
+    law_index   int,
+    item_index int,
+    start_index int,
+    end_index   int
+    ) returns rows like sentence
+    implementation "udf/extract_sentences.py" handles tsv lines.
+
+sentence += extract_sentences(id ,content,part_index ,chap_index ,sec_index  ,law_index, NULL,start_index,end_index) :- laws(id, part_index, chap_index, sec_index, _, law_index, start_index,_, _, _,end_index),items(id, part_index, chap_index, sec_index, law_index, totalItem, 0,_, _, _, _,_),content_phrases(id, content),[totalItem = 0].
+sentence += extract_sentences(id ,content,part_index ,chap_index ,sec_index  ,law_index, item_index,start_index,end_index) :- items(id, part_index, chap_index, sec_index, law_index, totalItem, item_index,start_index, end_index, _, _,_),[totalItem > 0],content_phrases(id, content).
+
+@extraction
+definition_mention(
+    mention_id text,
+    law_id text,
+    position text,
+    sentence_index int,
+    concept_expression text,
+    begin_exp int,
+    end_exp int,
+    explain_text text,
+    begin_explain int,
+    end_explain int
+).
+function extract_definition_mention over(
+    law_id  text,
+    position text,
+    sentence_index int,
+    sentence_text text,
+    tokens text[]
+    ) returns rows like definition_mention
+        implementation "udf/extract_definition_mention.py" handles tsv lines.
+definition_mention += extract_definition_mention( law_id , position , sentence_index,sentence_text ,tokens):-sentence(law_id,position,sentence_index,sentence_text,tokens,pos_tags).
+
+definition_features(
+    @key
+    @references(relation="has_definition", column="mention_id", alias="has_definition")
+    mention   text,
+    feature text
+).
+
+function extract_definition_features over (
+        mention_id          text,
+        begin_exp int,
+        end_exp   int,
+        begin_explain int,
+        end_explain  int,
+        tokens         text[],
+        pos_tags       text[]
+    ) returns rows like spouse_feature
+    implementation "udf/extract_definition_features.py" handles tsv lines.
+
+definition_features += extract_definition_features(mention_id ,begin_exp ,end_exp ,begin_explain ,end_explain ,tokens ,pos_tags ) :-definition_mention(mention_id,law_id ,position ,sentence_index,_,begin_exp ,end_exp ,_,begin_explain,end_explain),sentence(law_id, position, sentence_index, sentence_text, tokens, pos_tags).
+
+definition_label(
+    @key
+    @references(relation="has_definition", column="mention_id", alias="has_definition")
+    mention_id   text,
+    label   int,
+    rule_id text
+).
+
+function supervise_definition over (
+        mention_id text,
+        sentence_text text,
+        tokens text[],
+        begin_exp int,
+        end_exp int,
+        begin_explain int,
+        end_explain int,
+        sentence_source text[],
+        position_source text[]
+    ) returns (
+        mention_id   text, label   int, rule_id text
+    )
+    implementation "udf/supervise_definition.py" handles tsv lines.
+
+definition_label += supervise_definition(mention_id ,sentence_text,tokens ,begin_exp ,end_exp ,begin_explain ,end_explain,ARRAY_AGG(sen_text) , ARRAY_AGG(post)) :-definition_mention(mention_id,law_id ,position ,sentence_index,_,begin_exp ,end_exp ,_,begin_explain,end_explain), sentence(law_id, position, sentence_index, sentence_text, tokens, _),sentence(law_id, post, _, sen_text, _, _),[substring(post,length(post)-1,2) = quote_ident("_0")].
+definition_label(mention_id, 0, NULL) :- definition_mention(mention_id,_,_,_,_,_,_,_,_,_).
+
+@extraction
+has_definition?(
+    @key
+    @references(relation="definition_mention", column="mention_id", alias="definition_mention")
+    mention_id text
+).
+
+definition_label_resolved(mention_id, SUM(vote)) :- definition_label(mention_id,  vote, rule_id).
+has_definition(mention_id) = if l > 0 then TRUE
+                      else if l < 0 then FALSE
+                      else NULL end :- definition_label_resolved(mention_id, l).
+
+
+@weight(f)
+has_definition(id) :-definition_mention(id,_ ,_ ,_,_,_,_ ,_ ,_,_),
+    definition_features(id,f).
+
+
+#######################################################
+@ectraction
+legal_penalty_mention(
+    @key
+    mention_id text,
+    @searchable
+    mention_text text,
+    mention_type text,
+    @distributed_by
+    @references(relation="sentence", column="law_id", alias="appears_in")
+    law_id text,
+    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    position text,
+    begin_index int,
+    end_index int
+).
+
+function extract_legal_penalty_mention over(
+    law_id text,
+    position text,
+    sentence_text text,
+    tokens text[],
+    pos_tags text[]
+    ) returns rows like legal_penalty_mention
+        implementation "udf/extract_legal_penalty_mention.py" handles tsv lines.
+
+legal_penalty_mention += extract_legal_penalty_mention(
+    law_id,position,sentence_text,tokens,pos_tags
+) :- sentence(law_id,position,_,sentence_text,tokens,pos_tags).
+
+##extract name of crime mention candidates##
+@ectraction
+name_crime_mention(
+    name_crime text,
+    info_crime text,
+    @references(relation="sentence", column="position", alias="apperars_in")
+    position text,
+    @references(relation = "articles", column ="id", alias="apperars_in")
+    law_id text,
+    sentence_text text
+).
+function extract_name_crime_mention over (
+    law_id text,
+    position text,
+    sentence_index int,
+    sentence_text text,
+    tokens text[]
+    ) returns rows like name_crime_mention
+        implementation "udf/extract_name_crime_mention.py" handles tsv lines.
+name_crime_mention += extract_name_crime_mention(law_id, position, sentence_index, sentence_text, tokens) :-sentence(law_id, position, sentence_index, sentence_text, tokens, _).
+
+##extract crime mention candidates###
+@ectraction
+crime_mention(
+    @key
+    mention_id text,
+    @searchable
+    mention_text text,
+    mention_type text,
+    @distributed_by
+    @references(relation="sentence", column="law_id", alias ="appears_in")
+    law_id text,
+    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    position text,
+    begin_index int,
+    end_index int,
+    associated_penalty_id text
+).
+
+function extract_crime_mention over (
+    law_id text,
+    position text,
+    sentence_text text,
+    tokens text[],
+    pos_tags text[],
+    penalty_id text,
+    penalty_begin_index int,
+    penalty_end_index int
+) returns rows like crime_mention
+    implementation "udf/extract_crime_mention.py" handles tsv lines.
+
+crime_mention += extract_crime_mention( law_id, position, sentence_text, tokens, pos_tags, penalty_id, penalty_begin_index, penalty_end_index) :- sentence(law_id,position,_,sentence_text,tokens,pos_tags), legal_penalty_mention(penalty_id,_,_,law_id,position,penalty_begin_index,penalty_end_index).
