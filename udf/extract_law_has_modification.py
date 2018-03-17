@@ -27,22 +27,22 @@ def extractDate(string):
 	end_last = 0;
 	dd = re.search(r'\d{1,2}',string,re.U|re.M)
 	if dd is not None:
-		end_last = dd.start(0)
+		end_last += dd.end(0)
 		date = dd.group(0)
 	else :
 		return None
 	dd = re.search(r'\d{1,2}',string[end_last:],re.U|re.M)
 	if dd is not None:
-		end_last = dd.start(0)
-		date = date + '-' + dd.group(0)
+		end_last += dd.end(0)
+		date = dd.group(0) + '-' + date 
 	else :
 		return None
 	dd = re.search(r'\d{2,4}',string[end_last:],re.U|re.M)
 	if dd is not None:
 		if len(dd.group(0)) == 2:
-			date = date + '-' + '19' +dd.group(0)
+			date = '19' +dd.group(0) + '-' + date 
 		else:
-			date = date + '-' +dd.group(0)
+			date = dd.group(0) + '-' + date
 	else :
 		return None
 	return date
@@ -78,7 +78,7 @@ def extract(
 					yield [
 						doc_id,
 						get_id.group().strip(),
-						findDate(title[check_symbol.end(0):],15)
+						findDate(title[get_id.end(0):],15)
 					]
 			else :
 				getTitleModified = re.finditer(r'của\s',title,re.U|re.I)
