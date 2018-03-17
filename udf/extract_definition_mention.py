@@ -61,18 +61,25 @@ def extract(
 						break
 					end_index -= 1
 			concept_expression = " ".join(map(lambda i: tokens[i], xrange(begin_index, end_index + 1)))
-			explain_text = " ".join(map(lambda i: tokens[i], xrange(i+1, len(tokens))))
-			mention_id = law_id + "_" +position+ "_"+str(sentence_index) 
-			yield [
-				mention_id,
-				law_id,
-				position,
-				sentence_index,
-				concept_expression,
-				begin_index,
-				end_index,
-				explain_text,
-				i+1,
-				len(tokens)-1
-			]
-			break
+			concept_expression = concept_expression.replace(':','')
+			concept_expression = concept_expression.replace('"','')
+			concept_expression = concept_expression.replace('”','')
+			if len(concept_expression) > 0 :
+				if concept_expression[-1] == ',':
+					concept_expression[:-1]
+				concept_expression = concept_expression.strip()
+				explain_text = " ".join(map(lambda i: tokens[i], xrange(i+1, len(tokens))))
+				mention_id = law_id + "_" +position+ "_"+str(sentence_index) 
+				yield [
+					mention_id,
+					law_id,
+					position,
+					sentence_index,
+					concept_expression,
+					begin_index,
+					end_index,
+					explain_text,
+					i+1,
+					len(tokens)-1
+				]
+				break

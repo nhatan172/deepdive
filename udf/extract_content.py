@@ -29,10 +29,16 @@ def extract(
 
     content = content.replace('*',' ')
     content = content.replace('_',' ')
-    a = sorted(phrases,cmp = compare)
-    for i in a:
-        content = content.replace(i,add_underline(i))  
-    yield [
-        doc_id,
-        content
-    ]
+    if phrases is None or len(phrases) == 0:  
+        yield [
+            doc_id,
+            content
+        ]
+    else :
+        a = sorted(phrases,cmp = compare)
+        for i in a:
+            content = content.replace(i,add_underline(i))  
+        yield [
+            doc_id,
+            content
+        ]

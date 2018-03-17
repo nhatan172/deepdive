@@ -239,7 +239,7 @@ law_has_modification(
     @key
     @references(relation="articles", column="id", alias="articles")
     doc_id  text,
-    modyfied_doc_id text,
+    modyfied_doc text,
     modyfied_doc_released_date text
 ).
 
@@ -422,10 +422,12 @@ function extract_content over(
     phrases text[]
 )   returns rows like content_phrases
         implementation "udf/extract_content.py" handles tsv lines.
-content_phrases += extract_content(doc_id,content, ARRAY_AGG(phrases)) :- phrases(doc_id,phrases,_),articles(doc_id,_, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_).
+content_phrases += extract_content(doc_id,content, ARRAY_AGG(phrase)) :- phrases(doc_id,phrase,_),articles(doc_id,_, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_).
+content_phrases += extract_content(doc_id,content, NULL ) :- articles(doc_id,_, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_), !EXISTS[phrases(doc_id, _,_)].
 ## NLP markup #################################################################
 @extraction
 sentence(
+    @references(relation="articles", column="id", alias="appears_in")
     law_id  text,
     position text,
     sentence_index int,
@@ -447,14 +449,18 @@ function extract_sentences over (
     ) returns rows like sentence
     implementation "udf/extract_sentences.py" handles tsv lines.
 
-sentence += extract_sentences(id ,content,part_index ,chap_index ,sec_index  ,law_index, NULL,start_index,end_index) :- laws(id, part_index, chap_index, sec_index, _, law_index, start_index,_, _, _,end_index),items(id, part_index, chap_index, sec_index, law_index, totalItem, 0,_, _, _, _,_),content_phrases(id, content),[totalItem = 0].
+sentence += extract_sentences(id ,content,part_index ,chap_index ,sec_index ,law_index, NULL,start_index,end_index) :- laws(id, part_index, chap_index, sec_index, _, law_index, start_index,_, _, _,end_index),items(id, part_index, chap_index, sec_index, law_index, totalItem, 0,_, _, _, _,_),content_phrases(id, content),[totalItem = 0].
 sentence += extract_sentences(id ,content,part_index ,chap_index ,sec_index  ,law_index, item_index,start_index,end_index) :- items(id, part_index, chap_index, sec_index, law_index, totalItem, item_index,start_index, end_index, _, _,_),[totalItem > 0],content_phrases(id, content).
 
 @extraction
 definition_mention(
+    @key
     mention_id text,
+    @references(relation="sentences", column="doc_id",alias="appears_in")
     law_id text,
+    @references(relation="sentences", column="position",alias="appears_in")
     position text,
+    @references(relation="sentences", column="sentence_index",alias="appears_in")
     sentence_index int,
     concept_expression text,
     begin_exp int,
@@ -476,7 +482,8 @@ definition_mention += extract_definition_mention( law_id , position , sentence_i
 definition_features(
     @key
     @references(relation="has_definition", column="mention_id", alias="has_definition")
-    mention   text,
+    mention_id   text,
+    @key
     feature text
 ).
 
@@ -501,6 +508,8 @@ definition_label(
     rule_id text
 ).
 
+definition_label(mention_id, 0, NULL) :- definition_mention(mention_id,_,_,_,_,_,_,_,_,_).
+
 function supervise_definition over (
         mention_id text,
         sentence_text text,
@@ -516,8 +525,10 @@ function supervise_definition over (
     )
     implementation "udf/supervise_definition.py" handles tsv lines.
 
-definition_label += supervise_definition(mention_id ,sentence_text,tokens ,begin_exp ,end_exp ,begin_explain ,end_explain,ARRAY_AGG(sen_text) , ARRAY_AGG(post)) :-definition_mention(mention_id,law_id ,position ,sentence_index,_,begin_exp ,end_exp ,_,begin_explain,end_explain), sentence(law_id, position, sentence_index, sentence_text, tokens, _),sentence(law_id, post, _, sen_text, _, _),[substring(post,length(post)-1,2) = quote_ident("_0")].
-definition_label(mention_id, 0, NULL) :- definition_mention(mention_id,_,_,_,_,_,_,_,_,_).
+definition_label += supervise_definition(mention_id ,sentence_text,tokens ,begin_exp ,end_exp ,begin_explain ,end_explain,ARRAY_AGG(sen_text) , ARRAY_AGG(post)) :- 
+definition_mention(mention_id,law_id ,position ,sentence_index,_,begin_exp ,end_exp ,_,begin_explain,end_explain), 
+sentence(law_id, position, sentence_index, sentence_text, tokens, _),
+sentence(law_id, post, _, sen_text, _, _),[substring(post,length(post)-1,2) = quote_ident("_0")].
 
 @extraction
 has_definition?(
@@ -531,6 +542,10 @@ has_definition(mention_id) = if l > 0 then TRUE
                       else if l < 0 then FALSE
                       else NULL end :- definition_label_resolved(mention_id, l).
 
+@weight(1.0)
+has_definition(id) :-definition_label(id,label ,_ ), [ label::boolean = TRUE ].
+@weight(-1.0)
+has_definition(id) :-definition_label(id,label ,_ ), [label::boolean = TRUE].
 
 @weight(f)
 has_definition(id) :-definition_mention(id,_ ,_ ,_,_,_,_ ,_ ,_,_),

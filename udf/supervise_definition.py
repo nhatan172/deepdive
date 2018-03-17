@@ -24,14 +24,22 @@ def extract(
     position_source ="text[]"
     ):
 	
-	forbidden_word = ["nếu","phải","đó","không","được","đã","đồng_thời"]
-
-	if handle_string.toLowerCase(tokens[end_exp+2]) in forbidden_word:
-		yield [
-		mention_id,
-		-1,
-		"forbidden_word_1"
-		]
+	forbidden_word = ["nếu","phải","đó","không","được","đã","đồng_thời","cần", "chỉ",'cụ_thể'] 
+	for i in range(2):
+		if end_exp +2 +i <= end_explain:
+			if handle_string.toLowerCase(tokens[end_exp+2+i]) in forbidden_word:
+				yield [
+				mention_id,
+				-10,
+				"forbidden_word_1"
+				]
+		if end_exp - i >= begin_exp:
+			if handle_string.toLowerCase(tokens[end_exp-i]) in forbidden_word:
+				yield [
+				mention_id,
+				-10,
+				"forbidden_word_1"
+				]
 	if handle_string.toLowerCase(tokens[end_exp]) in forbidden_word:
 		yield [
 		mention_id,
@@ -59,10 +67,10 @@ def extract(
 		if mention_id[j] == '_':
 			break
 		j += 1
-	position_require = mention_id[j+1:i+1] + "0"
+	position_require = mention_id[j+1:i+1]
 	index = 0
 	for index in range(0,len(position_source)):
-		if position_source[index] in position_require :
+		if position_require in position_source[index] :
 			if divlaw.lenIterator(re.finditer(r"Giải_thích\stừ_ngữ",sentence_source[index],re.U|re.I)) > 0 :
 				yield [
 					mention_id,
