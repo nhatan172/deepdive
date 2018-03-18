@@ -41,8 +41,10 @@ def extractDate(string):
 	if dd is not None:
 		if len(dd.group(0)) == 2:
 			date = '19' +dd.group(0) + '-' + date 
-		else:
+		elif len(dd.group(0)) != 3:
 			date = dd.group(0) + '-' + date
+		else :
+			return None
 	else :
 		return None
 	return date
