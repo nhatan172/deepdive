@@ -22,7 +22,7 @@ def getTitle(string):
     return string[:end_title]
 def get_numerical_symbol(title):
     get_title1 = re.search(r'(của\s.*)\s(đã được|được)',title)
-    get_title  = re.search(r'([0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)+)',title,re.M|re.I)
+    get_title  = re.search(r'([0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+)',title,re.M|re.I)
     # get_id = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)+',get_content.group())
     # get_title1 = re.search(r'([0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)\s(đã được))|([0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)\s(được))',title)
     if(get_title1 is not None):

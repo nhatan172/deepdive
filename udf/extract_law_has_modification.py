@@ -7,18 +7,18 @@ import divlaw
 import handle_string
 from datetime import datetime
 
-def findDate(string,max_scope):
-	date_checker = re.search(r'ngày \d{1,2} tháng \d{1,2} năm \d{2,4}',string,re.U|re.I|re.M)
+def findDate(string):
+	date_checker = re.search(r'(.(?!\\n))+ngày \d{1,2} tháng \d{1,2} năm \d{2,4}',string,re.U|re.I|re.DOTALL)
 	if date_checker is not None:
-		if date_checker.start(0) <= max_scope:
+		if date_checker.start() <= 1:
 			return extractDate(date_checker.group(0))
-	date_checker = re.search(r'\d{1,2}\/\d{1,2}\/\d{2,4}',string,re.U|re.I|re.M)
+	date_checker = re.search(r'(.(?!\\n))+\d{1,2}\/\d{1,2}\/\d{2,4}',string,re.U|re.I|re.DOTALL)
 	if date_checker is not None:
-		if date_checker.start(0) <= max_scope:
+		if date_checker.start() <= 1:
 			return extractDate(date_checker.group(0))
-	date_checker = re.search(r'\d{1,2}-\d{1,2}-\d{2,4}',string,re.U|re.I|re.M)
+	date_checker = re.search(r'(.(?!\\n))+\d{1,2}-\d{1,2}-\d{2,4}',string,re.U|re.I|re.DOTALL)
 	if date_checker is not None:
-		if date_checker.start(0) <= max_scope:
+		if date_checker.start() <= 1:
 			return extractDate(date_checker.group(0))
 	return None
 
@@ -62,26 +62,26 @@ def extract(
     ):
 	temp = ""
 	if title.startswith('Sửa đổi') or title.startswith('Bổ sung'):
-		check_symbol = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+\s',title,re.U|re.I)
+		check_symbol = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+[^A-Za-z]',title,re.U|re.I)
 		if check_symbol is not None:
 			yield [
 				doc_id,
-				check_symbol.group().strip(),
-				findDate(title[check_symbol.end(0):],15)
+				(re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+',check_symbol.group(),re.U|re.I)).group(),
+				findDate(title[check_symbol.end(0):])
 			]
 		else :
-			get_content = re.finditer(re.escape(title)+r'\ssố\s',header_text,re.U|re.I)
+			get_content = re.finditer(re.escape(handle_string.toUpperCase(title.strip()))+
+				r'\s(SỐ\s)*[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+[^A-Za-z]',handle_string.toUpperCase(header_text),re.U|re.I)
 			if divlaw.lenIterator(get_content) >0 :
-				get_content = re.finditer(re.escape(title)+r'\ssố\s',header_text,re.U|re.I)
+				get_content = re.finditer(re.escape(handle_string.toUpperCase(title.strip()))+
+					r'\s(SỐ\s)*[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+[^A-Za-z]',handle_string.toUpperCase(header_text),re.U|re.I)
 				for i in get_content:
 					break
-				get_id = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+\s',header_text[i.end():],re.U|re.I)
-				if(get_id is not None):
-					yield [
+				yield [
 						doc_id,
-						get_id.group().strip(),
-						findDate(title[get_id.end(0):],15)
-					]
+						(re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+',i.group(0),re.U|re.I)).group(0),
+						findDate(title[i.end():])
+				]
 			else :
 				getTitleModified = re.finditer(r'của\s',title,re.U|re.I)
 				if divlaw.lenIterator(getTitleModified) >0 :
@@ -89,15 +89,15 @@ def extract(
 					for i in getTitleModified:
 						break
 					temp = title[i.end():]
-					get_content = re.finditer(re.escape(title),header_text,re.U|re.I)
+					get_content = re.finditer(re.escape(handle_string.toUpperCase(title)),handle_string.toUpperCase(header_text),re.U|re.I)
 					if divlaw.lenIterator(get_content) >0 :
-						get_content = re.finditer(re.escape(title),header_text,re.U|re.I)
+						get_content = re.finditer(re.escape(handle_string.toUpperCase(title)),handle_string.toUpperCase(header_text),re.U|re.I)
 						for i in get_content:
-							break
+							pass
 						yield [
 					 		doc_id,
 					 		temp,
-					 		findDate(header_text[i.end():],15)
+					 		findDate(header_text[i.end():])
 					 	]
 					else :
 						yield [

@@ -97,6 +97,11 @@ def toLowerCase(string):
     s = s.lower()
     s = s.encode('utf-8')
     return s
+def toUpperCase(string):
+    s = to_unicode(string)
+    s = s.upper()
+    s = s.encode('utf-8')
+    return s
 def standardString(string):
     return toLowerCase(string.strip())
     # s = to_unicode(string)

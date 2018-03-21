@@ -56,8 +56,8 @@ def extract(
             temp = type_doc[i] + " " + doc_title_resources[i]
             tempU = handle_string.to_unicode(temp)
             tempU = handle_string.toLowerCase(tempU)
-            if tempU.strip == tempReal.strip and (released_date_resources[i] == released_date_temp or released_date is None):
-                available == true
+            if tempU.strip() == tempReal.strip() and ((time.strptime(released_date_resources[i], "%Y-%m-%d")) == released_date_temp or released_date is None):
+                available == True
                 yield [
                     doc_id,
                     position,
