@@ -18,10 +18,10 @@ def getFirst(o):
 		break
 	return a
 def getTitle(string):
-    temp = re.finditer(r"\:(\s|\\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)
+    temp = re.finditer(r"\:(\s|\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)
     end_title = len(string)
     if divlaw.lenIterator(temp) > 0 :
-        temp = re.finditer(r"\:(\s|\\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)
+        temp = re.finditer(r"\:(\s|\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)
         for i in temp:
             end_title = i.start()
             break
@@ -161,7 +161,7 @@ def extract(
 			findType = re.finditer(r"(.+vào.+)|(.+(sau|trước)[^\:]{7,})",title,re.U)
 			if divlaw.lenIterator(findType) > 0:
 				type_modify = 8
-	        match = re.finditer(r"(\\n(\s|\_|\.|\*|\#)*\“(.(?!\“|\”))+.{2})|(\\n(\s|\_|\.|\*|\#)*\"(.(?!\"))+.{2})", content,re.DOTALL)
+	        match = re.finditer(r"(\n(\s|\_|\.|\*|\#)*\“(.(?!\“|\”))+.{2})|(\n(\s|\_|\.|\*|\#)*\"(.(?!\"))+.{2})", content,re.DOTALL)
 	        quotesIndex = []
 	        for i in match:
 	        	quotesIndex.append(i.start())
