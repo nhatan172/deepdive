@@ -61,8 +61,8 @@ def extract(
     title = "text"
     ):
 	temp = ""
-	if title.startswith('Sửa đổi') or title.startswith('Bổ sung'):
-		check_symbol = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+[^A-Za-z]',title,re.U|re.I)
+	if re.search(r'(sửa đổi|bổ sung)',handle_string.toLowerCase(title),re.U):
+		check_symbol = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+(\s|\_|\#|\*|\.|\\)',title,re.U|re.I)
 		if check_symbol is not None:
 			yield [
 				doc_id,
@@ -71,10 +71,10 @@ def extract(
 			]
 		else :
 			get_content = re.finditer(re.escape(handle_string.toUpperCase(title.strip()))+
-				r'\s(SỐ\s)*[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+[^A-Za-z]',handle_string.toUpperCase(header_text),re.U|re.I)
+				r'\s(SỐ\s)*[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+(\s|\_|\#|\*|\.|\\)',handle_string.toUpperCase(header_text),re.U|re.I)
 			if divlaw.lenIterator(get_content) >0 :
 				get_content = re.finditer(re.escape(handle_string.toUpperCase(title.strip()))+
-					r'\s(SỐ\s)*[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+[^A-Za-z]',handle_string.toUpperCase(header_text),re.U|re.I)
+					r'\s(SỐ\s)*[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+(\s|\_|\#|\*|\.|\\)',handle_string.toUpperCase(header_text),re.U|re.I)
 				for i in get_content:
 					break
 				yield [
