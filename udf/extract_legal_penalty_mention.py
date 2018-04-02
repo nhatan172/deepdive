@@ -32,12 +32,14 @@ def extract_mn_phrase(begin_index, pos_tags, tokens, max_distance):
                  mention_type="text",
                  law_id="text",
                  position ="text",
+                 sentence_index =  "int",
                  begin_index="int",
                  end_index="int",
          : [])
 def extract(
         doc_id="text",
         position="text",
+        sentence_index = "int",
         sentence_text = "text",
         tokens="text[]",
         pos_tags="text[]",
@@ -108,6 +110,7 @@ def extract(
                 mention_type,
                 doc_id,
                 position,
+                sentence_index,
                 begin_index,
                 end_index,
             ]

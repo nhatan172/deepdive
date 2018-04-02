@@ -64,9 +64,6 @@ parts += extract_parts(id, content) :- articles(id,_, content,  _, _, _, _, _, _
 ###############################################    
 @extraction
 chapters(
-    @key
-    @distributed_by
-    @references(relation="articles", column="id")
     law_id         text,
     @references(relation="parts",column="part_index")
     part_index      int,
@@ -542,7 +539,302 @@ has_definition(mention_id) = if l > 0 then TRUE
                       else if l < 0 then FALSE
                       else NULL end :- definition_label_resolved(mention_id, l).
 
-@weight(f)
-has_definition(id) :-definition_mention(id,_ ,_ ,_,_,_,_ ,_ ,_,_),
-    definition_features(id,f).
+#@weight(10.0)
+#has_definition(id) => has_definition(id) :- TRUE.
+#@weight(-10.0)
+#has_definition(id) => has_definition(id) :- FALSE.
 
+@weight(f)
+has_definition(id) :- definition_features(id,f).
+
+
+#######################################################
+#####################legal_penalty####################
+######################################################
+
+@ectraction
+legal_penalty_mention(
+    @key
+    mention_id text,
+    @searchable
+    mention_text text,
+    mention_type text,
+    @distributed_by
+    @references(relation="sentence", column="law_id", alias="appears_in")
+    law_id text,
+    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    position text,
+    sentence_index int,
+    begin_index int,
+    end_index int
+).
+
+function extract_legal_penalty_mention over(
+    law_id text,
+    position text,
+    sentence_index int,
+    sentence_text text,
+    tokens text[],
+    pos_tags text[]
+    ) returns rows like legal_penalty_mention
+        implementation "udf/extract_legal_penalty_mention.py" handles tsv lines.
+
+legal_penalty_mention += extract_legal_penalty_mention(
+    law_id, position, sentence_index, sentence_text, tokens, pos_tags ) :- sentence(law_id, position, sentence_index, sentence_text, tokens, pos_tags).
+
+
+######## Feature Extraction For legal penalties #######################
+
+
+@extraction
+legal_penalty_feature(
+    @key
+    @references(relation="has_legal_penalty", column="mention_id", alias="has_legal_penalty")
+    doc_id text,
+    @key
+    feature text
+).
+
+function extract_legal_penalty_feature over (
+        mention_id text,
+        doc_begin_index int,
+        doc_end_index int,
+        doc_id text,
+        position text,
+        sentence_index int,
+        tokens text[],
+        pos_tags text[]
+    ) returns rows like legal_penalty_feature
+        implementation "udf/extract_legal_penalty_feature.py" handles tsv lines.
+
+legal_penalty_feature += extract_legal_penalty_feature(
+    mention_id, doc_begin_index, doc_end_index, doc_id, position, sentence_index, tokens, pos_tags
+) :-
+    legal_penalty_mention(mention_id, _, _, doc_id, position, sentence_index, doc_begin_index, doc_end_index),
+    sentence(doc_id, position, sentence_index, _, tokens, pos_tags).
+
+## Distant Supervision for legal penalty ########################################################
+
+
+@extraction
+legal_penalty_label(
+    @key
+    @references(relation="has_legal_penalty", column="p_id", alias="has_legal_penalty")
+    p_id text,
+    @navigable
+    label int,
+    @navigable
+    rule_id text
+).
+
+legal_penalty_label(mention_id, 0, NULL) :- legal_penalty_mention(mention_id, _, _, _, _, _, _, _).
+
+
+@extraction
+has_legal_penalty?(
+    @key
+    @references(relation="legal_penalty_mention", column="mention_id", alias="legal_mention")
+    mention_id text
+).
+
+# supervision by heuristic rules in a UDF
+function supervise_legal_penalty over (
+        mention_id text, 
+        mention_begin_index int, 
+        mention_end_index int,
+        doc_id  text,
+        position text,
+        sentence_index int,
+        sentence_text  text,
+        tokens         text[],
+        pos_tags       text[]
+    ) returns (
+        mention_id text, label int, rule_id text
+    )
+    implementation "udf/supervise_legal_penalty.py" handles tsv lines.
+legal_penalty_label += supervise_legal_penalty(
+    mention_id, mention_begin_index, mention_end_index,
+    doc_id, position, sentence_index, sentence_text,
+    tokens, pos_tags) :- legal_penalty_mention(mention_id, _, _, doc_id, position, sentence_index, mention_begin_index, mention_end_index), sentence( doc_id, position, sentence_index, sentence_text, tokens, pos_tags ).
+
+
+# resolve multiple labels by majority vote (summing the labels in {-1,0,1})
+legal_penalty_label_resolved(mention_id, SUM(vote)) :- legal_penalty_label(mention_id, vote, rule_id).
+
+
+# assign the resolved labels for the has legal penalty relation
+has_legal_penalty(mention_id) = if l > 0 then TRUE
+                      else if l < 0 then FALSE
+                      else NULL end :- legal_penalty_label_resolved(mention_id, l).
+
+
+## Inference Rules ############################################################
+
+# Classify legal penalty
+@weight(f)
+has_legal_penalty(mention_id) :- legal_penalty_feature(mention_id, f).
+
+############################################
+############   crime    #############  
+################################
+
+
+
+##extract name of crime mention candidates##
+@ectraction
+name_crime_mention(
+    name_crime text,
+    info_crime text,
+    @references(relation="sentence", column="position", alias="apperars_in")
+    position text,
+    @references(relation = "articles", column ="id", alias="apperars_in")
+    law_id text,
+    sentence_text text
+).
+function extract_name_crime_mention over (
+    law_id text,
+    position text,
+    sentence_index int,
+    sentence_text text,
+    tokens text[]
+    ) returns rows like name_crime_mention
+        implementation "udf/extract_name_crime_mention.py" handles tsv lines.
+name_crime_mention += extract_name_crime_mention(
+                            law_id, position, sentence_index, sentence_text, tokens) 
+                    :-sentence(
+                        law_id, position, sentence_index, sentence_text, tokens, _).
+
+##extract crime mention candidates###
+
+@ectraction
+crime_mention(
+    @key
+    mention_id text,
+    @searchable
+    mention_text text,
+    mention_type text,
+    @distributed_by
+    @references(relation="sentence", column="law_id", alias ="appears_in")
+    law_id text,
+    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    position text,
+    sentence_index int,
+    begin_index int,
+    end_index int,
+    associated_penalty_id text
+).
+
+function extract_crime_mention over (
+    law_id text,
+    position text,
+    sentence_index int,
+    tokens text[],
+    pos_tags text[],
+    penalty_id text,
+    penalty_begin_index int,
+    penalty_end_index int
+) returns rows like crime_mention
+    implementation "udf/extract_crime_mention.py" handles tsv lines.
+
+crime_mention += extract_crime_mention( 
+                    law_id, position, sentence_index, tokens, pos_tags, penalty_id, penalty_begin_index, penalty_end_index) 
+                :- sentence(
+                        law_id, position, sentence_index, _, tokens, pos_tags), 
+                    legal_penalty_mention(
+                        penalty_id, _, _, law_id, position,sentence_index, 
+                        penalty_begin_index, penalty_end_index).
+
+
+
+@extraction
+crime_feature(
+    @key
+    @references(relation="has_crime", column="mention_id", alias="has_crime")
+    doc_id text,
+    @key
+    feature text
+).
+
+function extract_crime_feature over (
+        mention_id text,
+        doc_begin_index int,
+        doc_end_index int,
+        doc_id text,
+        position text,
+        sentence_index int,
+        tokens text[],
+        pos_tags text[]
+    ) returns rows like crime_feature
+    implementation "udf/extract_crime_feature.py" handles tsv lines.
+
+crime_feature += extract_crime_feature(
+                    mention_id, doc_begin_index, doc_end_index,
+                    doc_id, position, sentence_index, tokens, pos_tags) 
+                :- crime_mention(
+                        mention_id, _, _, doc_id, position, sentence_index, doc_begin_index, doc_end_index, _),
+                    sentence(
+                        doc_id, position, sentence_index, _, tokens, pos_tags).
+
+## Distant Supervision for Crime ########################################################
+@extraction
+crime_label(
+    @key
+    @references(relation="has_crime", column="c_id", alias="has_crime")
+    mention_id text,
+    @navigable
+    label int,
+    @navigable
+    rule_id text
+).
+
+
+has_crime?(
+    @key
+    @references(relation="crime_mention", column="mention_id", alias="crime")
+    mention_id text
+).
+
+# make sure all elements in legal_penalty_mention are considered as unsupervised examples
+crime_label(mention_id, 0, NULL) :- crime_mention(mention_id, _, _, _, _, _, _, _, _).
+
+
+#supervision by heuristic rules in a UDF from crime
+
+function supervise_crime over(
+    mention_id text,
+    mention_begin_index int,
+    mention_end_index int,
+    doc_id text,
+    position text,
+    sentence_index int,
+    sentence_text text,
+    tokens text[],
+    pos_tags text[],
+    label int
+    ) returns (
+        mention_id text, label int, rule_id text
+    )
+    implementation "udf/supervise_crime.py" handles tsv lines.
+crime_label += supervise_crime( 
+                        mention_id, mention_begin_index, mention_end_index, 
+                        doc_id, position, sentence_index, sentence_text, tokens, pos_tags ) 
+                :- crime_mention(
+                        mention_id, _, _, doc_id, position, sentence_index, 
+                        mention_begin_index, mention_end_index, _),
+                    sentence(
+                        doc_id, position, sentence_index, sentence_text, tokens, pos_tags),
+                    legal_penalty_label_resolved(mention_id, label).
+
+# resolve multiple labels by majority vote (summing the labels in {-1,0,1})
+crime_label_resolved(mention_id, SUM(vote)) :- crime_label(mention_id, vote, rule_id).
+
+# assign the resolved labels for the has legal penalty relation
+has_crime(mention_id) = if l > 0 then TRUE
+                      else if l < 0 then FALSE
+                      else NULL end :- crime_label_resolved(mention_id, l).
+
+
+
+# Classify Crime
+@weight(f)
+has_crime(mention_id) :- crime_feature(mention_id, f).

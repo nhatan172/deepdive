@@ -86,6 +86,7 @@ def find_character(tokens, start, character):
             mention_type = "text",
             law_id = "text",
             position = "text",
+            sentence_index = "int",
             begin_index = "int",
             end_index = "int",
             associated_penalty_id = "text"
@@ -93,12 +94,12 @@ def find_character(tokens, start, character):
 def extract(
         law_id = "text",
         position = "text",
-        sentence_text = "text",
+        sentence_index = "int",
         tokens = "text[]",
         pos_tags = "text[]",
         penalty_id = "text",
         penalty_begin_index = "int",
-        penalty_end_index = "int",
+        penalty_end_index = "int"
 ):
     num_tokens = len(tokens)
     is_passed = True
@@ -128,6 +129,7 @@ def extract(
                 mention_type,
                 law_id,
                 position,
+                sentence_index,
                 begin_index,
                 end_index,
                 associated_penalty_id
@@ -214,6 +216,7 @@ def extract(
                 mention_type,
                 law_id,
                 position,
+                sentence_index,
                 begin_index,
                 end_index,
                 associated_penalty_id
