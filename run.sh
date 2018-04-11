@@ -25,7 +25,7 @@ bash auto_phrase.sh
 cd ../../
 deepdive redo phrases
 deepdive redo content_phrases
-deepdive redo sentence
+deepdive redo sentences
 
 # deepdive redo legal_penalty_mention
 # deepdive redo name_crime_mention

@@ -24,22 +24,18 @@ def extract(
     chap_index 	="int",
     sec_index 	="int",
     law_index 	="int",
-    item_index  ="int",
     start_index ="int",
     end_index   ="int",
     ):
     sent_index = 0
-    for s in content[start_index:end_index].split("\\n"):
+    for s in content[start_index:end_index].split("\n"):
         if s != "":
             it = re.finditer(r"(.(?!(\.\s)))+.{2}",s,re.I)
             lent = divlaw.lenIterator(it)
             it = re.finditer(r"(.(?!(\.\s)))+.{2}",s,re.I)
             listIndex = []
             position = 0
-            if item_index is None:
-                position = "{}_{}_{}_{}_{}".format(part_index+1,chap_index+1,sec_index+1,law_index+1,0) 
-            else :
-                position = "{}_{}_{}_{}_{}".format(part_index+1,chap_index+1,sec_index+1,law_index+1,item_index+1) 
+            position = "{}_{}_{}_{}".format(part_index+1,chap_index+1,sec_index+1,law_index+1) 
             if lent > 0:
                 for i in it :
                     listIndex.append(i.start())

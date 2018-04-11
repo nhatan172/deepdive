@@ -69,17 +69,18 @@ def extract(
 					concept_expression[:-1]
 				concept_expression = concept_expression.strip()
 				explain_text = " ".join(map(lambda i: tokens[i], xrange(i+1, len(tokens))))
-				mention_id = law_id + "_" +position+ "_"+str(sentence_index) 
-				yield [
-					mention_id,
-					law_id,
-					position,
-					sentence_index,
-					concept_expression,
-					begin_index,
-					end_index,
-					explain_text,
-					i+1,
-					len(tokens)-1
-				]
-				break
+				mention_id = law_id + "_" +position+ "_"+str(sentence_index)
+				if i != 0 and (i + 1) < (len(tokens) - 1):
+					yield [
+						mention_id,
+						law_id,
+						position,
+						sentence_index,
+						concept_expression,
+						begin_index,
+						end_index,
+						explain_text,
+						i+1,
+						len(tokens)-1
+					]
+					break

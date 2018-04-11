@@ -70,10 +70,9 @@ def extract(
 	position_require = mention_id[j+1:i+1]
 	index = 0
 	for index in range(0,len(position_source)):
-		if position_require in position_source[index] :
-			if divlaw.lenIterator(re.finditer(r"Giải_thích\stừ_ngữ",sentence_source[index],re.U|re.I)) > 0 :
-				yield [
-					mention_id,
-					1,
-					"in_explain_words_law"
-				]
+		if divlaw.lenIterator(re.finditer(r"Giải_thích\stừ_ngữ",handle_string.replace_underscore(sentence_source[index]),re.U|re.I)) > 0 :
+			yield [
+				mention_id,
+				1,
+				"in_explain_words_law"
+			]
