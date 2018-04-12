@@ -161,11 +161,11 @@ def extract(
 			findType = re.finditer(r"(.+vào.+)|(.+(sau|trước)[^\:]{7,})",title,re.U)
 			if divlaw.lenIterator(findType) > 0:
 				type_modify = 8
-	        match = re.finditer(r"(\n(\s|\_|\.|\*|\#)*\“(.(?!\“|\”))+.{2})|(\n(\s|\_|\.|\*|\#)*\"(.(?!\"))+.{2})", content,re.DOTALL)
-	        quotesIndex = []
-	        for i in match:
-	        	quotesIndex.append(i.start())
-	        for j in range(len(quotesIndex)) :
+			match = re.finditer(r"(\n(\s|\_|\.|\*|\#)*\“(.(?!\“|\”))+.{2})|(\n(\s|\_|\.|\*|\#)*\"(.(?!\"))+.{2})", content,re.DOTALL)
+			quotesIndex = []
+			for i in match:
+				quotesIndex.append(i.start())
+			for j in range(len(quotesIndex)) :
 				if type_modify == 1:
 					divModify = divlaw.divPartModifyLaw(content)
 					if j != (len(quotesIndex) - 1):
@@ -628,43 +628,43 @@ def extract(
 			        released_date
 			    ]
 	if(type_modify == 4 ):
-	    p =re.compile(r'((t|T)hay\s)*(cụm\s)*từ\s')
-	    for location in p.finditer(content):
-	        sub_content = content[location.span()[1]:len(content)]
-	        temp = p.finditer(sub_content)
-	        if(lenIterator(temp)>0):
-	            for temp in p.finditer(sub_content):
-	            	# sub_content_from : lấy cụm từ cần sửa đổi để tách 
-	                sub_content_from = sub_content[0:temp.span()[1]]
-	                break
-	        temp_replace = re.search(r'(\“|\")(\s)*.+(\s)*(\”|\")\s.*(được\s)*(thay\s)*bằng\s(cụm\s)*từ',sub_content_from)
-	        if(temp_replace is not None):
-	            temp_from_replace = re.search(r'(\“|\")(\s)*.+(\s)*(\”|\")',temp_replace.group())
-	            from_replace = temp_from_replace.group()
-	            temp_replace = re.search(r'(được\s)*(thay\s)*bằng\s(cụm\s)*từ\s(\“|\")(\s)*.+(\s)*(\”|\")',sub_content)
-	            if(temp_replace is not None):
-		            temp_to_replace = re.search(r'(\“|\")(\s)*.+(\s)*(\”|\")',temp_replace.group())
-		            to_replace = temp_to_replace.group()
-		            t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
-		            extract = t.finditer(sub_content,re.DOTALL)
-		            if(lenIterator(extract)>0):
-		                for extract in t.finditer(sub_content):
-		                    temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',sub_content[extract.span()[0]:extract.span()[1]])
-		                    if(temp_law is not None):
-		                        law = temp_law.group()
-		                    else :
-		                        law = None
-		                    temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
-		                    if(temp_item is not None):
-		                        item = temp_item.group()[8:]
-		                    else :
-		                        item = None
-		                    temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
-		                    if(temp_point is not None):
-		                        point = temp_point.group()[8:]
-		                    else :
-		                        point = None
-		                    yield[
+		p =re.compile(r'((t|T)hay\s)*(cụm\s)*từ\s')
+		for location in p.finditer(content):
+			sub_content = content[location.span()[1]:len(content)]
+			temp = p.finditer(sub_content)
+			if(lenIterator(temp)>0):
+				for temp in p.finditer(sub_content):
+					# sub_content_from : lấy cụm từ cần sửa đổi để tách 
+					sub_content_from = sub_content[0:temp.span()[1]]
+					break
+			temp_replace = re.search(r'(\“|\")(\s)*.+(\s)*(\”|\")\s.*(được\s)*(thay\s)*bằng\s(cụm\s)*từ',sub_content_from)
+			if(temp_replace is not None):
+				temp_from_replace = re.search(r'(\“|\")(\s)*.+(\s)*(\”|\")',temp_replace.group())
+				from_replace = temp_from_replace.group()
+				temp_replace = re.search(r'(được\s)*(thay\s)*bằng\s(cụm\s)*từ\s(\“|\")(\s)*.+(\s)*(\”|\")',sub_content)
+				if(temp_replace is not None):
+					temp_to_replace = re.search(r'(\“|\")(\s)*.+(\s)*(\”|\")',temp_replace.group())
+					to_replace = temp_to_replace.group()
+					t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
+					extract = t.finditer(sub_content,re.DOTALL)
+					if(lenIterator(extract)>0):
+						for extract in t.finditer(sub_content):
+							temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',sub_content[extract.span()[0]:extract.span()[1]])
+							if(temp_law is not None):
+								law = temp_law.group()
+							else :
+								law = None
+							temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
+							if(temp_item is not None):
+								item = temp_item.group()[8:]
+							else :
+								item = None
+							temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
+							if(temp_point is not None):
+								point = temp_point.group()[8:]
+							else :
+								point = None
+							yield[
 		                        law_id,
 			                    position,
 								type_modify,
@@ -680,8 +680,8 @@ def extract(
 			                    numerical_symbol,
 			                    released_date
 		                    ]
-	        else :
-	            yield[
+			else :
+				yield[
 	                law_id,
 			        position,
 					type_modify,
@@ -698,34 +698,34 @@ def extract(
 			        released_date
 	            ]
 	if(type_modify == 7):
-	    text_delete = re.search(r'(\“|\").+(\”|\")',content,re.M|re.I)
-	    if(text_delete is not None):
-	        # numerical_symbol = get_numerical_symbol(content)
-	        t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
-	        extract = t.finditer(content)
-	        if(lenIterator(extract)>0):
-	            for extract in t.finditer(content):
-	                temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_chapter is not None):
-	                    chapter = temp_chapter.group()
-	                else:
-	                    chapter = None
-	                temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_law is not None):
-	                    law = temp_law.group()
-	                else :
-	                    law = None
-	                temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_item is not None):
-	                    item = temp_item.group()[8:]
-	                else :
-	                    item = None
-	                temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_point is not None):
-	                    point = temp_point.group()[8:]
-	                else :
-	                    point = None
-	                yield[
+		text_delete = re.search(r'(\“|\").+(\”|\")',content,re.M|re.I)
+		if(text_delete is not None):
+			# numerical_symbol = get_numerical_symbol(content)
+			t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
+			extract = t.finditer(content)
+			if(lenIterator(extract)>0):
+				for extract in t.finditer(content):
+					temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_chapter is not None):
+						chapter = temp_chapter.group()
+					else:
+						chapter = None
+					temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',content[extract.span()[0]:extract.span()[1]])
+					if(temp_law is not None):
+						law = temp_law.group()
+					else :
+						law = None
+					temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_item is not None):
+						item = temp_item.group()[8:]
+					else :
+						item = None
+					temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_point is not None):
+						point = temp_point.group()[8:]
+					else :
+						point = None
+					yield[
 	                    law_id,
 	                    position,
 						type_modify,
@@ -741,32 +741,32 @@ def extract(
 	                    numerical_symbol,
 	                    released_date
 	                ]
-	    else :
-	    	t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
-	        extract = t.finditer(content)
-	        if(lenIterator(extract)>0):
-	            for extract in t.finditer(content):
-	                temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_chapter is not None):
-	                    chapter = temp_chapter.group()
-	                else:
-	                    chapter = None
-	                temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_law is not None):
-	                    law = temp_law.group()
-	                else :
-	                    law = None
-	                temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_item is not None):
-	                    item = temp_item.group()[8:]
-	                else :
-	                    item = None
-	                temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_point is not None):
-	                    point = temp_point.group()[8:]
-	                else :
-	                    point = None
-	                yield[
+		else :
+			t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
+			extract = t.finditer(content)
+			if(lenIterator(extract)>0):
+				for extract in t.finditer(content):
+					temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_chapter is not None):
+						chapter = temp_chapter.group()
+					else:
+						chapter = None
+					temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',content[extract.span()[0]:extract.span()[1]])
+					if(temp_law is not None):
+						law = temp_law.group()
+					else :
+						law = None
+					temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_item is not None):
+						item = temp_item.group()[8:]
+					else :
+						item = None
+					temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_point is not None):
+						point = temp_point.group()[8:]
+					else :
+						point = None
+					yield[
 	                    law_id,
 	                    position,
 						type_modify,
@@ -782,52 +782,53 @@ def extract(
 	                    numerical_symbol,
 	                    released_date
 	                ]
-	        yield[
-	            law_id,
-		        position,
-				type_modify,
-		        None,
-		        None,
-		        None,
-		        None,
-		        None,
-		        None,
-		        None,
-		        None,
-		        None,
-		        numerical_symbol,
-		        released_date
-	        ]
+			else :
+				yield[
+		            law_id,
+			        position,
+					type_modify,
+			        None,
+			        None,
+			        None,
+			        None,
+			        None,
+			        None,
+			        None,
+			        None,
+			        None,
+			        numerical_symbol,
+			        released_date
+		        ]
 	if(type_modify == 5):
-	    location = re.search('(t|T)ên của\s.*\sđược\s((s|S)ửa đổi\,\s)*((b|B)ổ sung\s)*',content)
-	    if(location is not None):
-	        sub_content = location.group()
-	        text = re.search('(\"|\").*(\"|\")',content)
-	        t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
-	        extract = t.finditer(sub_content)
-	        if(lenIterator(extract)>0):
-	            for extract in t.finditer(sub_content):
-	                temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
-	                if(temp_chapter is not None):
-	                    chapter = temp_chapter.group()
-	                else:
-	                    chapter = None
-	                temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',sub_content[extract.span()[0]:extract.span()[1]])
-	                if(temp_law is not None):
-	                    law = temp_law.group()
-	                else :
-	                    law = None
-	                temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
-	                if(temp_item is not None):
-	                    item = temp_item.group()[8:]
-	                else :
-	                    item = None
-	                temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
-	                if(temp_point is not None):
-	                    point = temp_point.group()[8:]
-	                else :
-	                    point = None
-	                yield[
+		location = re.search('(t|T)ên của\s.*\sđược\s((s|S)ửa đổi\,\s)*((b|B)ổ sung\s)*',content)
+		if(location is not None):
+			sub_content = location.group()
+			text = re.search('(\"|\").*(\"|\")',content)
+			t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
+			extract = t.finditer(sub_content)
+			if(lenIterator(extract)>0):
+				for extract in t.finditer(sub_content):
+					temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
+					if(temp_chapter is not None):
+						chapter = temp_chapter.group()
+					else:
+						chapter = None
+					temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',sub_content[extract.span()[0]:extract.span()[1]])
+					if(temp_law is not None):
+						law = temp_law.group()
+					else :
+						law = None
+					temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
+					if(temp_item is not None):
+						item = temp_item.group()[8:]
+					else :
+						item = None
+					temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',sub_content[extract.span()[0]:extract.span()[1]])
+					if(temp_point is not None):
+						point = temp_point.group()[8:]
+					else :
+						point = None
+					yield[
 	                        law_id,
 		                    position,
 							type_modify,
@@ -843,8 +844,8 @@ def extract(
 		                    numerical_symbol,
 		                    released_date
 	                ]
-	    else :
-	        yield[
+		else :
+			yield[
 	            law_id,
 	            position,
 				type_modify,
@@ -861,33 +862,33 @@ def extract(
 	            released_date
 	        ]
 	if(type_modify == 6):
-	    text = re.search('(\“|\"|\").*(\”|\"|\")',content)
-	    if(text is not None):
-	        t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
-	        extract = t.finditer(content)
-	        if(lenIterator(extract)>0):
-	            for extract in t.finditer(content):
-	                temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_chapter is not None):
-	                    chapter = temp_chapter.group()
-	                else:
-	                    chapter = None
-	                temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_law is not None):
-	                    law = temp_law.group()
-	                else :
-	                    law = None
-	                temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_item is not None):
-	                    item = temp_item.group()[8:]
-	                else :
-	                    item = None
-	                temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
-	                if(temp_point is not None):
-	                    point = temp_point.group()[8:]
-	                else :
-	                    point = None
-	                yield[
+		text = re.search('(\“|\"|\").*(\”|\"|\")',content)
+		if(text is not None):
+			t = re.compile(r'(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))\s(c|C)hương\s(\w{1,10}|\d{1,5})\s|(c|C)hương\s(\w{1,10}|\d{1,5})\s|(Đ|đ)iểm\s(\w{1,5}|\d{1,5})\s(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(k|K)hoản\s(\w{1,5}|\d{1,5})\s(Đ|đ)iều\s((\w{1,5})|(\d{1,5}))|(đ|Đ)iều\s((\w{1,5})|(\d{1,5}))')
+			extract = t.finditer(content)
+			if(lenIterator(extract)>0):
+				for extract in t.finditer(content):
+					temp_chapter = re.search(r'(c|C)hương\s(\w{1,10}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_chapter is not None):
+						chapter = temp_chapter.group()
+					else:
+						chapter = None
+					temp_law = re.search(r'(đ|Đ)iều\s((\d{1,5})([a-zđ]|[A-Z])?)',content[extract.span()[0]:extract.span()[1]])
+					if(temp_law is not None):
+						law = temp_law.group()
+					else :
+						law = None
+					temp_item = re.search(r'(Khoản|khoản)\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_item is not None):
+						item = temp_item.group()[8:]
+					else :
+						item = None
+					temp_point = re.search(r'(đ|Đ)iểm\s(\w{1,5}|\d{1,5})',content[extract.span()[0]:extract.span()[1]])
+					if(temp_point is not None):
+						point = temp_point.group()[8:]
+					else :
+						point = None
+					yield[
 	                    law_id,
 	                    position,
 						type_modify,
@@ -903,8 +904,8 @@ def extract(
 	                    numerical_symbol,
 	                    released_date
 	                ]
-	    else :
-	        yield[
+		else :
+			yield[
 	            law_id,
 		        position,
 				type_modify,

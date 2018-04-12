@@ -12,7 +12,7 @@ def lenIterator(list):
         sum += 1
     return sum
 def getTitle(string):
-    temp = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})",string,re.DOTALL)
+    temp = re.finditer(r"\:(\s|\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)
     end_title = len(string)
     if lenIterator(temp) > 0 :
         temp = re.finditer(r"\:(\s|\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)    
@@ -21,16 +21,17 @@ def getTitle(string):
             break
     return string[:end_title]
 def get_numerical_symbol(title):
+    title = re.sub(r'(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})',"",title,re.M|re.DOTALL)
     get_title1 = re.search(r'(của\s.*)\s(đã được|được)',title)
-    get_title  = re.search(r'([0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+)',title,re.M|re.I)
+    get_title  = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+(\s|\_|\#|\*|\.|\\)',title,re.M|re.I)
     # get_id = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)+',get_content.group())
     # get_title1 = re.search(r'([0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)\s(đã được))|([0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)\s(được))',title)
     if(get_title1 is not None):
-        number = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐ]+[0-9]*)+',get_title1.group())
+        number = re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+(\s|\_|\#|\*|\.|\\)',get_title1.group())
         if(number is not None):
-            return number.group()
+            return (re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+',number.group(),re.U|re.I)).group()
     elif ((get_title is not None) and (get_title1 is None)):
-        return get_title.group()
+        return (re.search(r'[0-9]+(/[0-9]+)*((/|-)[A-ZĐƯ]+[0-9]*)+',get_title.group(),re.U|re.I)).group()
     else :
         return None
 @tsv_extractor
