@@ -349,9 +349,16 @@ function extract_link_modify_articles over(
     released_date_resources date[]
     )   returns rows like link_modify_articles
         implementation "udf/extract_link_modify_articles.py" handles tsv lines.
+# link_modify_articles += extract_link_modify_articles(doc_id,position,modify_title,released_date,ARRAY_AGG(doc_id_resources),
+# ARRAY_AGG(doc_title_resources),ARRAY_AGG(doc_symbol_resources),ARRAY_AGG(type),ARRAY_AGG(public_date)) :-  articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_),extract_modify(
+#     doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources].
+
 link_modify_articles += extract_link_modify_articles(doc_id,position,modify_title,released_date,ARRAY_AGG(doc_id_resources),
 ARRAY_AGG(doc_title_resources),ARRAY_AGG(doc_symbol_resources),ARRAY_AGG(type),ARRAY_AGG(public_date)) :-  articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_),extract_modify(
-    doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources].
+    doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources, lower(modify_title) = lower(doc_symbol_resources); doc_id != doc_id_resources, trim(lower(modify_title)) = trim(lower(type || " " || doc_title_resources)) ].
+link_modify_articles(doc_id,position,"NA")  :-  extract_modify(
+    doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), !EXISTS[ articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_), 
+[doc_id != doc_id_resources, lower(modify_title) = lower(doc_symbol_resources); doc_id != doc_id_resources, trim(lower(modify_title)) = trim(lower(type || " " || doc_title_resources))]]. 
 ###################
 index_modify_positions(
     @key
@@ -423,7 +430,7 @@ content_phrases += extract_content(doc_id,content, ARRAY_AGG(phrase)) :- phrases
 content_phrases += extract_content(doc_id,content, NULL ) :- articles(doc_id,_, content,  _, _, _, _, _, _, _,_,_,_,_,_,_,_,_,_), !EXISTS[phrases(doc_id, _,_)].
 ## NLP markup #################################################################
 @extraction
-sentence(
+sentences(
     @references(relation="articles", column="id", alias="appears_in")
     law_id  text,
     position text,
@@ -443,11 +450,12 @@ function extract_sentences over (
     item_index int,
     start_index int,
     end_index   int
-    ) returns rows like sentence
+    ) returns rows like sentences
     implementation "udf/extract_sentences.py" handles tsv lines.
 
-sentence += extract_sentences(id ,content,part_index ,chap_index ,sec_index ,law_index, NULL,start_index,end_index) :- laws(id, part_index, chap_index, sec_index, _, law_index, start_index,_, _, _,end_index),items(id, part_index, chap_index, sec_index, law_index, totalItem, 0,_, _, _, _,_),content_phrases(id, content),[totalItem = 0].
-sentence += extract_sentences(id ,content,part_index ,chap_index ,sec_index  ,law_index, item_index,start_index,end_index) :- items(id, part_index, chap_index, sec_index, law_index, totalItem, item_index,start_index, end_index, _, _,_),[totalItem > 0],content_phrases(id, content).
+
+sentences += extract_sentences(id ,content,part_index ,chap_index ,sec_index ,law_index, NULL,start_index,end_index) :- laws(id, part_index, chap_index, sec_index, _, law_index, start_index,_, _, _,end_index),items(id, part_index, chap_index, sec_index, law_index, totalItem, 0,_, _, _, _,_),content_phrases(id, content),[totalItem = 0].
+sentences += extract_sentences(id ,content,part_index ,chap_index ,sec_index  ,law_index, item_index,start_index,end_index) :- items(id, part_index, chap_index, sec_index, law_index, totalItem, item_index,start_index, end_index, _, _,_),[totalItem > 0],content_phrases(id, content).
 
 @extraction
 definition_mention(
@@ -474,7 +482,7 @@ function extract_definition_mention over(
     tokens text[]
     ) returns rows like definition_mention
         implementation "udf/extract_definition_mention.py" handles tsv lines.
-definition_mention += extract_definition_mention( law_id , position , sentence_index,sentence_text ,tokens):-sentence(law_id,position,sentence_index,sentence_text,tokens,pos_tags).
+definition_mention += extract_definition_mention( law_id , position , sentence_index,sentence_text ,tokens):-sentences(law_id,position,sentence_index,sentence_text,tokens,pos_tags).
 
 definition_features(
     @key
@@ -495,7 +503,8 @@ function extract_definition_features over (
     ) returns rows like spouse_feature
     implementation "udf/extract_definition_features.py" handles tsv lines.
 
-definition_features += extract_definition_features(mention_id ,begin_exp ,end_exp ,begin_explain ,end_explain ,tokens ,pos_tags ) :-definition_mention(mention_id,law_id ,position ,sentence_index,_,begin_exp ,end_exp ,_,begin_explain,end_explain),sentence(law_id, position, sentence_index, sentence_text, tokens, pos_tags).
+definition_features += extract_definition_features(mention_id ,begin_exp ,end_exp ,begin_explain ,end_explain ,tokens ,pos_tags ) :- 
+definition_mention(mention_id,law_id ,position ,sentence_index,_,begin_exp ,end_exp ,_,begin_explain,end_explain),sentences(law_id, position, sentence_index, sentence_text, tokens, pos_tags).
 
 definition_label(
     @key
@@ -524,8 +533,8 @@ function supervise_definition over (
 
 definition_label += supervise_definition(mention_id ,sentence_text,tokens ,begin_exp ,end_exp ,begin_explain ,end_explain,ARRAY_AGG(sen_text) , ARRAY_AGG(post)) :- 
 definition_mention(mention_id,law_id ,position ,sentence_index,_,begin_exp ,end_exp ,_,begin_explain,end_explain), 
-sentence(law_id, position, sentence_index, sentence_text, tokens, _),
-sentence(law_id, post, _, sen_text, _, _),[substring(post,length(post)-1,2) = quote_ident("_0")].
+sentences(law_id, position, sentence_index, sentence_text, tokens, _),
+sentences(law_id, post, _, sen_text, _, _),[position = post].
 
 @extraction
 has_definition?(
@@ -539,20 +548,49 @@ has_definition(mention_id) = if l > 0 then TRUE
                       else if l < 0 then FALSE
                       else NULL end :- definition_label_resolved(mention_id, l).
 
-#@weight(10.0)
-#has_definition(id) => has_definition(id) :- TRUE.
-#@weight(-10.0)
-#has_definition(id) => has_definition(id) :- FALSE.
-
 @weight(f)
 has_definition(id) :- definition_features(id,f).
+
+#######################################################
+#####################legal_penalty####################
+######################################################
+
+@extraction
+sentences_crime(
+    @references(relation="articles", column="id", alias="appears_in")
+    law_id  text,
+    position text,
+    sentence_index int,
+    sentence_text text,
+    tokens text[],
+    pos_tags text[],
+    parent_post text
+).
+
+function extract_sentences_crime over (
+    id          text,
+    content     text,
+    part_index  int,
+    chap_index  int,
+    sec_index   int,
+    law_index   int,
+    item_index int,
+    point_index int,
+    start_index int,
+    end_index   int
+    ) returns rows like sentence
+    implementation "udf/extract_sentences_crime.py" handles tsv lines.
+
+sentences_crime += extract_sentences_crime(id ,content,part_index ,chap_index ,sec_index ,law_index,NULL,NULL,start_index,end_index) :- laws(id, part_index, chap_index, sec_index, _, law_index, start_index,_, _, _,end_index),content_phrases(id, content).
+sentences_crime += extract_sentences_crime(id ,content,part_index ,chap_index ,sec_index ,law_index,item_index,NULL,start_index,end_index) :- items(id, part_index, chap_index, sec_index, law_index,totalItem,item_index, start_index,_, _, _,end_index),content_phrases(id, content),[totalItem > 0].
+sentences_crime += extract_sentences_crime(id ,content,part_index ,chap_index ,sec_index ,law_index,item_index,point_index,start_index,end_index) :- points(id, part_index, chap_index, sec_index, law_index, item_index,totalPoint,point_index, start_index,end_index, _, _),content_phrases(id, content),[totalPoint > 0].
 
 
 #######################################################
 #####################legal_penalty####################
 ######################################################
 
-@ectraction
+@extraction
 legal_penalty_mention(
     @key
     mention_id text,
@@ -560,9 +598,9 @@ legal_penalty_mention(
     mention_text text,
     mention_type text,
     @distributed_by
-    @references(relation="sentence", column="law_id", alias="appears_in")
+    @references(relation="sentences_crime", column="law_id", alias="appears_in")
     law_id text,
-    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    @references(relation="sentences_crime", column="sentence_index", alias="appears_in")
     position text,
     sentence_index int,
     begin_index int,
@@ -580,7 +618,7 @@ function extract_legal_penalty_mention over(
         implementation "udf/extract_legal_penalty_mention.py" handles tsv lines.
 
 legal_penalty_mention += extract_legal_penalty_mention(
-    law_id, position, sentence_index, sentence_text, tokens, pos_tags ) :- sentence(law_id, position, sentence_index, sentence_text, tokens, pos_tags).
+    law_id, position, sentence_index, sentence_text, tokens, pos_tags ) :- sentences_crime(law_id, position, sentence_index, sentence_text, tokens, pos_tags, _).
 
 
 ######## Feature Extraction For legal penalties #######################
@@ -611,7 +649,7 @@ legal_penalty_feature += extract_legal_penalty_feature(
     mention_id, doc_begin_index, doc_end_index, doc_id, position, sentence_index, tokens, pos_tags
 ) :-
     legal_penalty_mention(mention_id, _, _, doc_id, position, sentence_index, doc_begin_index, doc_end_index),
-    sentence(doc_id, position, sentence_index, _, tokens, pos_tags).
+    sentences_crime(doc_id, position, sentence_index, _, tokens, pos_tags, _).
 
 ## Distant Supervision for legal penalty ########################################################
 
@@ -655,7 +693,7 @@ function supervise_legal_penalty over (
 legal_penalty_label += supervise_legal_penalty(
     mention_id, mention_begin_index, mention_end_index,
     doc_id, position, sentence_index, sentence_text,
-    tokens, pos_tags) :- legal_penalty_mention(mention_id, _, _, doc_id, position, sentence_index, mention_begin_index, mention_end_index), sentence( doc_id, position, sentence_index, sentence_text, tokens, pos_tags ).
+    tokens, pos_tags) :- legal_penalty_mention(mention_id, _, _, doc_id, position, sentence_index, mention_begin_index, mention_end_index), sentences_crime( doc_id, position, sentence_index, sentence_text, tokens, pos_tags, _).
 
 
 # resolve multiple labels by majority vote (summing the labels in {-1,0,1})
@@ -681,32 +719,32 @@ has_legal_penalty(mention_id) :- legal_penalty_feature(mention_id, f).
 
 
 ##extract name of crime mention candidates##
-@ectraction
-name_crime_mention(
-    name_crime text,
-    info_crime text,
-    @references(relation="sentence", column="position", alias="apperars_in")
-    position text,
-    @references(relation = "articles", column ="id", alias="apperars_in")
-    law_id text,
-    sentence_text text
-).
-function extract_name_crime_mention over (
-    law_id text,
-    position text,
-    sentence_index int,
-    sentence_text text,
-    tokens text[]
-    ) returns rows like name_crime_mention
-        implementation "udf/extract_name_crime_mention.py" handles tsv lines.
-name_crime_mention += extract_name_crime_mention(
-                            law_id, position, sentence_index, sentence_text, tokens) 
-                    :-sentence(
-                        law_id, position, sentence_index, sentence_text, tokens, _).
+# @extraction
+# name_crime_mention(
+#     name_crime text,
+#     info_crime text,
+#     @references(relation="sentences_crime", column="position", alias="apperars_in")
+#     position text,
+#     @references(relation = "sentences_crime", column ="id", alias="apperars_in")
+#     law_id text,
+#     sentence_text text
+# ).
+# function extract_name_crime_mention over (
+#     law_id text,
+#     position text,
+#     sentence_index int,
+#     sentence_text text,
+#     tokens text[]
+#     ) returns rows like name_crime_mention
+#         implementation "udf/extract_name_crime_mention.py" handles tsv lines.
+# name_crime_mention += extract_name_crime_mention(
+#                             law_id, position, sentence_index, sentence_text, tokens) 
+#                     :-sentences_crime(
+#                         law_id, position, sentence_index, sentence_text, tokens, _).
 
 ##extract crime mention candidates###
 
-@ectraction
+@extraction
 crime_mention(
     @key
     mention_id text,
@@ -714,9 +752,9 @@ crime_mention(
     mention_text text,
     mention_type text,
     @distributed_by
-    @references(relation="sentence", column="law_id", alias ="appears_in")
+    @references(relation="sentences_crime", column="law_id", alias ="appears_in")
     law_id text,
-    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    @references(relation="sentences_crime", column="sentence_index", alias="appears_in")
     position text,
     sentence_index int,
     begin_index int,
@@ -732,19 +770,29 @@ function extract_crime_mention over (
     pos_tags text[],
     penalty_id text,
     penalty_begin_index int,
-    penalty_end_index int
+    penalty_end_index int,
+    list_sent text[]
 ) returns rows like crime_mention
     implementation "udf/extract_crime_mention.py" handles tsv lines.
 
 crime_mention += extract_crime_mention( 
-                    law_id, position, sentence_index, tokens, pos_tags, penalty_id, penalty_begin_index, penalty_end_index) 
-                :- sentence(
-                        law_id, position, sentence_index, _, tokens, pos_tags), 
+                    law_id, position, sentence_index, tokens, pos_tags, penalty_id, penalty_begin_index, penalty_end_index, ARRAY_AGG(sent)) 
+                :- sentences_crime(
+                        law_id, position, sentence_index, _, tokens, pos_tags, _), 
                     legal_penalty_mention(
                         penalty_id, _, _, law_id, position,sentence_index, 
-                        penalty_begin_index, penalty_end_index).
-
-
+                        penalty_begin_index, penalty_end_index), 
+                    sentences_crime(
+                        law_id, _, _, sent, _, _, position).
+crime_mention += extract_crime_mention( 
+                    law_id, position, sentence_index, tokens, pos_tags, penalty_id, penalty_begin_index, penalty_end_index, NULL) 
+                :- sentences_crime(
+                        law_id, position, sentence_index, _, tokens, pos_tags, _), 
+                    legal_penalty_mention(
+                        penalty_id, _, _, law_id, position,sentence_index, 
+                        penalty_begin_index, penalty_end_index), 
+                    !EXISTS[sentences_crime(
+                        law_id, _, _, _, _, _, position)].
 
 @extraction
 crime_feature(
@@ -772,8 +820,8 @@ crime_feature += extract_crime_feature(
                     doc_id, position, sentence_index, tokens, pos_tags) 
                 :- crime_mention(
                         mention_id, _, _, doc_id, position, sentence_index, doc_begin_index, doc_end_index, _),
-                    sentence(
-                        doc_id, position, sentence_index, _, tokens, pos_tags).
+                    sentences_crime(
+                        doc_id, position, sentence_index, _, tokens, pos_tags,_).
 
 ## Distant Supervision for Crime ########################################################
 @extraction
@@ -817,12 +865,12 @@ function supervise_crime over(
     implementation "udf/supervise_crime.py" handles tsv lines.
 crime_label += supervise_crime( 
                         mention_id, mention_begin_index, mention_end_index, 
-                        doc_id, position, sentence_index, sentence_text, tokens, pos_tags ) 
+                        doc_id, position, sentence_index, sentence_text, tokens, pos_tags, label ) 
                 :- crime_mention(
-                        mention_id, _, _, doc_id, position, sentence_index, 
-                        mention_begin_index, mention_end_index, _),
-                    sentence(
-                        doc_id, position, sentence_index, sentence_text, tokens, pos_tags),
+                        _, _, _, doc_id, position, sentence_index, 
+                        mention_begin_index, mention_end_index, mention_id),
+                    sentences_crime(
+                        doc_id, position, sentence_index, sentence_text, tokens, pos_tags, _),
                     legal_penalty_label_resolved(mention_id, label).
 
 # resolve multiple labels by majority vote (summing the labels in {-1,0,1})

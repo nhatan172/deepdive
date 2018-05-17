@@ -19,9 +19,7 @@ dictionaries = dict()
 
 def load_dictionary(filename, dict_id="", func=lambda x: x):
     """Load a dictionary to be used for generic features.
-
     Returns the id used to identify the dictionary.
-
     Args:
         filename: full path to the dictionary. The dictionary is actually a set
         of words, one word per line.
@@ -56,8 +54,7 @@ def get_generic_features_mention(sentence, span, length_bin_size=5):
     for window_feat in _get_window_features(sentence, span):
         yield window_feat
     # Is (substring of) mention in a dictionary?
-    for dict_indicator_feat in _get_dictionary_indicator_features(
-            sentence, span):
+    for dict_indicator_feat in _get_dictionary_indicator_features(sentence, span):
         yield dict_indicator_feat
     # Dependency path(s) from mention to keyword(s). Various transformations of
     # the dependency path are done.
@@ -521,10 +518,10 @@ def get_seq_definition_features(sentence, span1, span2, length_bin_size=5):
 
     for first_pos_feature in _get_first_pos_features(sentence,span1,span2):
         yield first_pos_feature
-    for length_feature in _get_length_span_feature(span1):
+    for length_feature in _get_length_span_feature_2(span1):
         yield "DEFINE_"+length_feature
-    for length_feature in _get_length_span_feature_2(span2):
-        yield "EXPLAIN_"+length_feature
+    # for length_feature in _get_length_span_feature_2(span2):
+    #     yield "EXPLAIN_"+length_feature
     temp_span = Span(begin_word_id=(span2.begin_word_id - 1), length=1)
     for window_feat in _get_window_features(sentence, temp_span):
         yield window_feat
@@ -538,47 +535,102 @@ def get_seq_definition_features(sentence, span1, span2, length_bin_size=5):
         yield "IS_CANDIDATE"
     else :
         yield "NOT_CANDIDATE"
-def _get_length_span_feature(span):
+    for token_feature in _get_relation_token_feature(sentence,span1,span2):
+        yield token_feature
+    for seq_feat in _get_seq_features(sentence, span1):
+        yield seq_feat
+    for f in get_generic_def_mention(sentence,span1) :
+        yield f
+    for dict_indicator_feat in _get_dictionary_indicator_features(sentence, span1):
+        yield dict_indicator_feat
+# def _get_length_span_feature(span):
+#     if (span.length < 10) :
+#         yield "LENGTH_SPAN_SHORT_TRUE"
+#     else :
+#         yield "LENGTH_SPAN_SHORT_FALSE"
+#     if (span.length < 20) :
+#         yield "LENGTH_SPAN_LONG_TRUE"
+#     else :
+#         yield "LENGTH_SPAN_LONG_FALSE"
+
+def _get_length_span_feature_2(span):
     if (span.length < 10) :
         yield "LENGTH_SPAN_SHORT_TRUE"
     else :
         yield "LENGTH_SPAN_SHORT_FALSE"
-    if (span.length > 20) :
-        yield "LENGTH_SPAN_LONG_TRUE"
-    else :
-        yield "LENGTH_SPAN_LONG_FALSE"
-
-def _get_length_span_feature_2(span):
-    if (span.length < 5) :
+    if (span.length <= 1) :
         yield "LENGTH_SPAN_TOO_SHORT_TRUE"
     else :
         yield "LENGTH_SPAN_TOO_SHORT_FALSE"
-    if (span.length < 10) :
-        yield "LENGTH_SPAN_SHORT_TRUE"
-    else :
-        yield "LENGTH_SPAN_SHORT_FALSE"
 
 def _get_last_pos_features(sentence,span):
     span_first_pos = ""
     span_first_pos = sentence[span.begin_word_id+span.length -1].pos
     return "LAST_POS_DEF_" + span_first_pos
+
+def _get_relation_token_feature(sentence,span1,span2):
+    try:
+        for i in {1, 2}:
+            token = str(sentence[span2.begin_word_id - i - 1].word)
+            yield "LEFT_TOKEN_" + str(i) + '_' + toLowerCase(token)
+    except IndexError:
+        pass
+    try:
+        for i in {1, 2}:
+            token = str(sentence[span2.begin_word_id + i - 1].word)
+            yield "RIGHT_TOKEN_" + str(i) + '_' + toLowerCase(token)
+    except IndexError:
+        pass
+
+def get_generic_def_mention(sentence, span, length_bin_size=5):
     
+    for dict_indicator_feat in _get_dictionary_indicator_features(
+            sentence, span):
+        yield dict_indicator_feat
+    # Dependency path(s) from mention to keyword(s). Various transformations of
+    # the dependency path are done.
+    for (i, j) in _get_substring_indices(len(sentence), MAX_KW_LENGTH):
+        if i >= span.begin_word_id and i < span.begin_word_id + span.length:
+            continue
+        if j > span.begin_word_id and j < span.begin_word_id + span.length:
+            continue
+        is_in_dictionary = False
+        for dict_id in dictionaries:
+            if " ".join(map(lambda x: str(x.lemma), sentence[i:j])) in \
+                    dictionaries[dict_id]:
+                is_in_dictionary = True
+                yield "KW_IND_[" + dict_id + "]"
+                break
+        if is_in_dictionary:
+            kw_span = Span(begin_word_id=i, length=j-i)
+            for dep_path_feature in _get_min_dep_path_features(
+                    sentence, span, kw_span, "KW"):
+                yield dep_path_feature
+    # The mention starts with a capital
+    length = len(" ".join(materialize_span(sentence, span, lambda x: x.word)))
+    bin_id = length // length_bin_size
+    length_feat = "LENGTH_" + str(bin_id)
+    yield length_feat
+
 def _get_first_pos_features(sentence,span1, span2):
     span1_first_pos = ""
     span2_first_pos = ""
     NOUN_POS = ["N","Nc","Ny","Np"]
-    span1_first_pos = sentence[span1.begin_word_id].pos
-    yield "FIRST_POS_DEF_" + span1_first_pos
-    span2_first_pos = sentence[span2.begin_word_id].pos
-    yield "FIRST_POS_EXPL_" + span2_first_pos
-    if span1_first_pos in NOUN_POS:
-        span1_first_pos = 'N'
-    if span2_first_pos in NOUN_POS:
-        span2_first_pos = 'N'    
-    if span1_first_pos == span2_first_pos:
-        yield "FIRST_POS_SAME"
-    else :
-        yield "FIRST_POS_DIFFER"
+    try:
+        span1_first_pos = sentence[span1.begin_word_id].pos
+        yield "FIRST_POS_DEF_" + span1_first_pos
+        span2_first_pos = sentence[span2.begin_word_id].pos
+        yield "FIRST_POS_EXPL_" + span2_first_pos
+        if span1_first_pos in NOUN_POS:
+            span1_first_pos = 'N'
+        if span2_first_pos in NOUN_POS:
+            span2_first_pos = 'N'    
+        if span1_first_pos == span2_first_pos:
+            yield "FIRST_POS_SAME"
+        else :
+            yield "FIRST_POS_DIFFER"
+    except IndexError:
+        pass
 def _get_same_token_definition_feature(sentence,span1,span2):
     definition = " ".join(map(lambda x: str(x.word), sentence[span2.begin_word_id:span2.begin_word_id+span2.length]))
     definition = toLowerCase(definition)
@@ -590,24 +642,30 @@ def _get_same_token_definition_feature(sentence,span1,span2):
                 yield "TOKEN_" +str(i+1) +"_NOT_IN_EXPL"
 def is_candidate(sentence,span1,span2) :
     checking_text = " ".join(map(lambda x: str(x.word), sentence[span2.begin_word_id:span2.begin_word_id+span2.length]))
+    checking_text = toLowerCase(checking_text)
     for i in range(0,span1.length) :
-        for j in str.split(sentence[span1.begin_word_id+i].word,"_") :
-            if j is not None and j.isalpha() :
-                if toLowerCase(j) in checking_text:
-                    return True
+        if sentence[span1.begin_word_id +i].pos != 'F':
+            for j in str.split(sentence[span1.begin_word_id+i].word,"_") :
+                if j is not None and isAlpha(j) and j != '' :
+                    if toLowerCase(j) in checking_text:
+                        return True
     return False
 ########## Extend function
+
+def to_unicode(string, encoding = 'utf-8'):
+    if isinstance(string, basestring):
+        if not isinstance(string, unicode):
+            string = unicode(string, encoding)
+    return string
+def isAlpha(string):
+    stri = to_unicode(string)
+    return stri[0].isalpha()
 def is_upper(string):
     s = to_unicode(string)
     symbol = [".", "\\" ,"/", "+","*","?","%","_","<",">",",",":",";","\'","\"","[","]","|","{","}"]
     if string[0] in symbol:
         False
     return (s[0].isupper() and s[0].isalpha())
-def to_unicode(string, encoding = 'utf-8'):
-    if isinstance(string, basestring):
-        if not isinstance(string, unicode):
-            string = unicode(string, encoding)
-    return string
 def toLowerCase(string):
     s = to_unicode(string)
     s = s.lower()

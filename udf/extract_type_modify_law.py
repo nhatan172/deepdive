@@ -12,7 +12,7 @@ def lenIterator(list):
         sum += 1
     return sum
 def getTitle(string):
-    temp = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})",string,re.DOTALL)
+    temp = re.finditer(r"\:(\s|\\n|\*|\_|\#)*(\“|\")+.{2}",string,re.DOTALL)
     end_title = len(string)
     if lenIterator(temp) > 0 :
         temp = re.finditer(r"\:(\s|\\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)    
@@ -61,8 +61,11 @@ def extract(
     numerical_symbol = "text",
     date_released ="text"   
     ):
-
+    
     doc_content_update = None
+    point_content_org = point_content
+    law_content_org = law_content
+    item_content_org = item_content
     if law_content is not None:
         # law_content = handle_string.to_unicode(law_content)
         law_content = law_content[:law_len]
@@ -89,13 +92,13 @@ def extract(
         type_modify = re.search(r'(((b|B)ổ sung cụm từ)|((b|B)ổ sung từ))',point_content)
         if(type_modify is not None):
             type = 3
-            doc_content_update = point_content
+            doc_content_update = point_content_org
             point = 1
         else :
             type_change_name = re.search(r'(S|s)ửa đổi tên',point_content) 
             if(type_change_name is not None):
                 type = 6
-                doc_content_update = point_content
+                doc_content_update = point_content_org
                 point = 1
             else:
                 type_delete = re.search(r'(b|B)ãi bỏ',point_content)
@@ -104,13 +107,13 @@ def extract(
                     inQuote = divlaw.itemInQuote(point_content,type_delete.start())
                 if(type_delete is not None) and not inQuote:
                     type = 2
-                    doc_content_update = point_content
+                    doc_content_update = point_content_org
                     point = 1
                 else:
                     type_delete_text = re.search(r'(((b|B)ỏ cụm từ)|((b|B)ỏ từ))',point_content)
                     if(type_delete_text is not None):
                         type = 7
-                        doc_content_update = point_content
+                        doc_content_update = point_content_org
                         point =1
                     else: 
                         type_add_text = p.finditer(point_content)
@@ -119,17 +122,17 @@ def extract(
                         len2 = lenIterator(type_add_text1)
                         if( (len1 != len2) and (len1 > 0)):
                             type = 1
-                            doc_content_update = point_content
+                            doc_content_update = point_content_org
                             point = 1
                         else : 
                             # type_change_text = re.search(r'(t|T)hay\s.*cụm từ',point_content)
                             type_change_text = re.search(r'((t|T)hay\s)*(cụm\s)*từ\s.*(được\s)*(thay\s)*bằng\s(cụm\s)*từ',point_content)
                             if(type_change_text is not None):
                                 type = 4
-                                doc_content_update = point_content
+                                doc_content_update = point_content_org
                                 point = 1
                             else : 
-                                type_name_to_name = re.search(r'((t|T)ên của\s).+(((S|s)ửa đổi\s)*(\,\s)*((b|B)ổ sung\s)*)(thành)',point_content)
+                                type_name_to_name = re.search(r'((t|T)ên của\s).+(((S|s)ửa đổi\s)(\,\s)*((b|B)ổ sung\s)*)(thành)',point_content)
                                 if(type_name_to_name is not None):
                                     type = 5
                                     doc_content_update =point_content
@@ -145,13 +148,13 @@ def extract(
         type_modify = re.search(r'(b|B)ổ sung cụm từ',item_content)
         if(type_modify is not None):
             type = 3
-            doc_content_update = item_content
+            doc_content_update = item_content_org
             point = 1
         else:
             type_change_name = re.search(r'(S|s)ửa đổi tên',item_content) 
             if(type_change_name is not None):
                 type = 6
-                doc_content_update = item_content
+                doc_content_update = item_content_org
                 point = 1
             else:
                 type_delete = re.search(r'(b|B)ãi bỏ',item_content)
@@ -160,13 +163,13 @@ def extract(
                     inQuote = divlaw.itemInQuote(item_content,type_delete.start())
                 if(type_delete is not None) and not inQuote:
                     type = 2
-                    doc_content_update = item_content
+                    doc_content_update = item_content_org
                     point = 1
                 else:
                     type_delete_text = re.search(r'(((b|B)ỏ cụm từ)|((b|B)ỏ từ))',item_content)
                     if(type_delete_text is not None):
                         type = 7
-                        doc_content_update = item_content
+                        doc_content_update = item_content_org
                         point = 1
                     else: 
                         # type_add_text = re.search(r'((((S|s)ửa đổi)(\s|\,)*((b|B)ổ sung)*)|((b|B)ổ sung))',item_content)
@@ -177,25 +180,25 @@ def extract(
                         len2 = lenIterator(type_add_text1)
                         if( (len1 != len2) and (len1 > 0)):
                             type = 1
-                            doc_content_update = item_content
+                            doc_content_update = item_content_org
                             point=1
                         else:
                             # type_change_text = re.search(r'(t|T)hay\s.*cụm từ',item_content)
                             type_change_text = re.search(r'((t|T)hay\s)*(cụm\s)*từ\s.*(được\s)*(thay\s)*bằng\s(cụm\s)*từ',item_content)
                             if(type_change_text is not None):
                                 type = 4
-                                doc_content_update = item_content
+                                doc_content_update = item_content_org
                                 point = 1
                             else : 
-                                type_name_to_name = re.search(r'((t|T)ên của\s).+(((S|s)ửa đổi\s)*(\,\s)*((b|B)ổ sung\s)*)(thành)',item_content)
+                                type_name_to_name = re.search(r'((t|T)ên của\s).+(((S|s)ửa đổi\s)(\,\s)*((b|B)ổ sung\s)*)(thành)',item_content)
                                 if(type_name_to_name is not None):
                                     type = 5
-                                    doc_content_update = item_content
+                                    doc_content_update = item_content_org
                                     point = 1
                                 else : 
                                     point = 0
         # if(totalpoint > 0 and point == 1 ):
-        #     doc_content_update = point_content
+        #     doc_content_update = point_content_org
     if(totalLaw >0 and point == 0 ):
         number = get_numerical_symbol(getTitle(law_content))
         if(number is not None):
@@ -205,13 +208,13 @@ def extract(
         type_modify = re.search(r'(b|B)ổ sung cụm từ',law_content)
         if(type_modify is not None):
             type = 3
-            doc_content_update = law_content
+            doc_content_update = law_content_org
             point = 1  
         else:
             type_change_name = re.search(r'(S|s)ửa đổi tên',law_content) 
             if(type_change_name is not None):
                 type = 6
-                doc_content_update = law_content
+                doc_content_update = law_content_org
                 point = 1
             else:
                 type_delete = re.search(r'(b|B)ãi bỏ',law_content)
@@ -220,13 +223,13 @@ def extract(
                     inQuote = divlaw.itemInQuote(law_content,type_delete.start())
                 if(type_delete is not None) and  not inQuote:
                     type = 2
-                    doc_content_update = law_content
+                    doc_content_update = law_content_org
                     point = 1
                 else:
                     type_delete_text = re.search(r'(((b|B)ỏ cụm từ)|((b|B)ỏ từ))',law_content)
                     if(type_delete_text is not None):
                         type = 7
-                        doc_content_update = law_content
+                        doc_content_update = law_content_org
                         point = 1
                     else: 
                         type_add_text = p.finditer(law_content)
@@ -235,24 +238,24 @@ def extract(
                         len2 = lenIterator(type_add_text1)
                         if( (len1 != len2) and (len1 > 0)):
                             type = 1
-                            doc_content_update = law_content
+                            doc_content_update = law_content_org
                             point = 1
                         else:
                             type_change_text = re.search(r'((t|T)hay\s)*(cụm\s)*từ\s.*(được\s)*(thay\s)*bằng\s(cụm\s)*từ',law_content)
                             if(type_change_text is not None):
                                 type = 4
-                                doc_content_update = law_content
+                                doc_content_update = law_content_org
                                 point = 1
                             else : 
-                                type_name_to_name = re.search(r'((t|T)ên của\s).+(((S|s)ửa đổi\s)*(\,\s)*((b|B)ổ sung\s)*)(thành)',law_content)
+                                type_name_to_name = re.search(r'((t|T)ên của\s).+(((S|s)ửa đổi\s)(\,\s)*((b|B)ổ sung\s)*)(thành)',law_content)
                                 if(type_name_to_name is not None):
                                     type = 5
-                                    doc_content_update = law_content
+                                    doc_content_update = law_content_org
                                     point = 1
                                 else : 
                                     point = 0
         # if(totalItem > 0):
-        #     doc_content_update = item_content
+        #     doc_content_update = item_content_org
     if(point == 1):
         yield[
             law_id,

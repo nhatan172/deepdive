@@ -54,9 +54,9 @@ def extract(
 
     # regexs
     # (example: 100.000 đồng)
-    REGEX_MONEY = ur'^(?:\d+(?:[\.\s]\d{3})*|(?:[^\W\d]|\s)+)(?:\s+(?:triệu|tỷ))?\s+đồng$'
+    REGEX_MONEY = ur'^(?:\d+(?:[\.\s]\d{3})*|(?:[^\W\d]|\s)+)(?:\s+(?:triệu|tỷ))?((\s+đồng)|\s+đ)$'
     # (example: 100.000 đồng đến 200.000 đồng)
-    REGEX_MONEY_RANGE = ur'^(?:\d+(?:[\.\s]\d{3})+|(?:[^\W\d]|\s)+)(?:\s+triệu)?\s+đồng(?:[^\W\d]|\s)+(?:\d+(?:[\.\s]\d{3})+|(?:[^\W\d]|\s)+)(?:\s+triệu)?\s+đồng$'
+    REGEX_MONEY_RANGE = ur'^(?:\d+(?:[\.\s]\d{3})+|(?:[^\W\d]|\s)+)(?:\s+triệu)?((\s+đồng)|\s+đ)(?:[^\W\d]|\s)+(?:\d+(?:[\.\s]\d{3})+|(?:[^\W\d]|\s)+)(?:\s+triệu)?((\s+đồng)|\s+đ)$'
     # (example: 1 năm, 01 năm, 20 năm, hai mươi năm)
     REGEX_DATE = ur'^(?:\d{1,2}|(?:[^\W\d]|\s)+)\s+(?:năm|tháng)$'
     # (example: 01 năm đến 02 năm, một năm đến hai năm)
