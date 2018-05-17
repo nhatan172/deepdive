@@ -12,10 +12,10 @@ def lenIterator(list):
         sum += 1
     return sum
 def getTitle(string):
-    temp = re.finditer(r"\:(\s|\\n|\*|\_|\#)*(\“|\")+.{2}",string,re.DOTALL)
+    temp = re.finditer(r"\:(\s|\n|\*|\_|\#)*(\“|\")+.{2}",string,re.DOTALL)
     end_title = len(string)
     if lenIterator(temp) > 0 :
-        temp = re.finditer(r"\:(\s|\\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)    
+        temp = re.finditer(r"\:(\s|\n|\*|\_|\#)*(\“|\")",string,re.DOTALL)    
         for i in temp:
             end_title = i.start()
             break

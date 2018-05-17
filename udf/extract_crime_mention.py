@@ -131,9 +131,9 @@ def extract(
 		# generate a mention identifier
 		mention_id = "{}_{}_{}_{}".format(law_id, position, begin_index, end_index)
 
-		mention_text_temp = '\\n'.join(word for word in list_sent[0: len(list_sent)])
+		mention_text_temp = '\n'.join(word for word in list_sent[0: len(list_sent)])
 		mention_text = " ".join(map(lambda k: tokens[k].replace('\\', '\\\\'), range(begin_index, end_index + 1)))
-		mention_text = mention_text + '\\n' + mention_text_temp
+		mention_text = mention_text + '\n' + mention_text_temp
 		mention_type = "IN_ONE_SENTENCE"
 		associated_penalty_id = penalty_id
 		yield [

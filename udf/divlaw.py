@@ -40,7 +40,7 @@ def lenIterator(list):
 			sum += 1
 	return sum
 def itemInQuote(string, index) :
-	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
+	quotes = re.finditer(r"((\“|\")(.(?!\“|\”|\"))+.{2})", string,re.DOTALL)
 	for i in quotes :
 		if index >= i.span()[0] and index < i.span()[1] :
 			return True
@@ -49,12 +49,12 @@ def itemInQuote(string, index) :
 def divPart(string):
 	limitText = len(string)
 	partIndex = []
-	it = re.finditer(r"\\n(\*|\s|\#|\_|\.)*(Phần(\*|\s|\#|\_)+thứ|PHẦN(\*|\s|\#|\_)+THỨ)(\*|\s|\#|\_)+", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_|\.)*(Phần(\*|\s|\#|\_)+thứ|PHẦN(\*|\s|\#|\_)+THỨ)(\*|\s|\#|\_)+", string)
 	sum = 0
 	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
 	sumQoutes = lenIterator(quotes)
 	if lenIterator(it) > 0 :
-		it = re.finditer(r"\\n(\*|\s|\#|\_|\.)*(Phần(\*|\s|\#|\_)+thứ|PHẦN(\*|\s|\#|\_)+THỨ)(\*|\s|\#|\_)+", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_|\.)*(Phần(\*|\s|\#|\_)+thứ|PHẦN(\*|\s|\#|\_)+THỨ)(\*|\s|\#|\_)+", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -127,10 +127,10 @@ def divPart(string):
 		listParts.append(part)
 	result['parts'] = listParts
 	return result
-#(\\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[a-z]|[0-9])+)
+#(\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[a-z]|[0-9])+)
 #Chia theo chuong
 def divChapter(string, startIndex) :
-	it = re.finditer(r"\\n(\*|\s|\#|\_)*(Chương|CHƯƠNG)(\*|\s|\#|\_)+([A-Z]|[a-z]|[0-9])", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_)*(Chương|CHƯƠNG)(\*|\s|\#|\_)+([A-Z]|[a-z]|[0-9])", string)
 	chapterIndex = [] #chuoi cac index bat dau cua cac chapter
 	listChaps = []
 	sum =  0
@@ -138,7 +138,7 @@ def divChapter(string, startIndex) :
 	sumQoutes = lenIterator(quotes)
 	a = lenIterator(it)
 	if  a >0:
-		it = re.finditer(r"\\n(\*|\s|\#|\_)*(Chương|CHƯƠNG)(\*|\s|\#|\_)+([A-Z]|[a-z]|[0-9])", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_)*(Chương|CHƯƠNG)(\*|\s|\#|\_)+([A-Z]|[a-z]|[0-9])", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -205,7 +205,7 @@ def divChapter(string, startIndex) :
 
 #Chia theo muc
 def divSection(string, startIndex):
-	it = re.finditer(r"(\\n(\*|\s|\#|\_|\.)*(Mục|MỤC)(\*|\s|\#|\_)+(\w|[0-9])+(\_|\.|\s)*)", string)
+	it = re.finditer(r"(\n(\*|\s|\#|\_|\.)*(Mục|MỤC)(\*|\s|\#|\_)+(\w|[0-9])+(\_|\.|\s)*)", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -213,7 +213,7 @@ def divSection(string, startIndex):
 	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
 	sumQoutes = lenIterator(quotes)
 	if a>0:
-		it = re.finditer(r"(\\n(\*|\s|\#|\_|\.)*(Mục|MỤC)(\*|\s|\#|\_)+(\w|[0-9])+(\_|\.|\s)*)", string)
+		it = re.finditer(r"(\n(\*|\s|\#|\_|\.)*(Mục|MỤC)(\*|\s|\#|\_)+(\w|[0-9])+(\_|\.|\s)*)", string)
 		for match in it:
 			if sumQoutes > 0:
 				if itemInQuote(string, match.span()[0]) == False :
@@ -281,7 +281,7 @@ def divSection(string, startIndex):
 #chia theo dieu
 #dont need change name variable
 def divLaw(string,startIndex):
-	it = re.finditer(r"\\n(\*|\s|\#|\_)*(Điều|ĐIỀU|Điều)(\*|\s|\#|\_)+[0-9]+(\w|Đ|đ)*", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_)*(Điều|ĐIỀU|Điều)(\*|\s|\#|\_)+[0-9]+(\w|Đ|đ)*", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -289,7 +289,7 @@ def divLaw(string,startIndex):
 	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
 	sumQoutes = lenIterator(quotes)
 	if a>0:
-		it = re.finditer(r"\\n(\*|\s|\#|\_)*(Điều|ĐIỀU|Điều)(\*|\s|\#|\_)+[0-9]+(\w|Đ|đ)*", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_)*(Điều|ĐIỀU|Điều)(\*|\s|\#|\_)+[0-9]+(\w|Đ|đ)*", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -355,7 +355,7 @@ def divLaw(string,startIndex):
 	return resultlist
 
 def divItem(string,startIndex) :
-	it = re.finditer(r"\\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -364,7 +364,7 @@ def divItem(string,startIndex) :
 	a = lenIterator(it)
 	
 	if a>0:
-		it = re.finditer(r"\\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -424,7 +424,7 @@ def divItem(string,startIndex) :
 	resultlist.append(sum)
 	return resultlist
 def divPoint(string,startIndex) :
-	it = re.finditer(r"\\n(\s|\*|\_|\#)*(\w|đ)+(\s|\*|\_)*\)", string)
+	it = re.finditer(r"\n(\s|\*|\_|\#)*(\w|đ)+(\s|\*|\_)*\)", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -433,7 +433,7 @@ def divPoint(string,startIndex) :
 	a = lenIterator(it)
 
 	if a>0:
-		it = re.finditer(r"\\n(\s|\*|\_|\#)*([a-z]|đ)+(\s|\*|\_)*\)", string)
+		it = re.finditer(r"\n(\s|\*|\_|\#)*([a-z]|đ)+(\s|\*|\_)*\)", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -481,7 +481,7 @@ def divPoint(string,startIndex) :
 	resultlist.append(sum)
 	return resultlist
 def newDivItem(string,startIndex):
-	it = re.finditer(r"\\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -490,7 +490,7 @@ def newDivItem(string,startIndex):
 	a = lenIterator(it)
 
 	if a>0:
-		it = re.finditer(r"\\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -540,7 +540,7 @@ def newDivItem(string,startIndex):
 	resultlist.append(sum)
 	return resultlist
 def newDivPoint(string,startIndex):
-	it = re.finditer(r"\\n(\s|\*|\_|\#)*(\w|đ)+(\s|\*|\_)*\)", string)
+	it = re.finditer(r"\n(\s|\*|\_|\#)*(\w|đ)+(\s|\*|\_)*\)", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -549,7 +549,7 @@ def newDivPoint(string,startIndex):
 	a = lenIterator(it)
 
 	if a>0:
-		it = re.finditer(r"\\n(\s|\*|\_|\#)*([a-z]|đ)+(\s|\*|\_)*\)", string)
+		it = re.finditer(r"\n(\s|\*|\_|\#)*([a-z]|đ)+(\s|\*|\_)*\)", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -657,9 +657,9 @@ def getPoint(result, indexPart, indexChapter, indexSec, indexLaw, indexItem, ind
 def divPartModifyLaw(string):
 	limitText = len(string)
 	partIndex = []
-	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\")*(Phần thứ|PHẦN THỨ)\s", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_|\“|\")*(Phần thứ|PHẦN THỨ)\s", string)
 	if lenIterator(it) > 0 :
-		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\")*(Phần thứ|PHẦN THỨ)\s", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_|\“|\")*(Phần thứ|PHẦN THỨ)\s", string)
 		for match in it:
 			partIndex.append(match.span()[0]+2)
 		result = {
@@ -727,12 +727,12 @@ def divPartModifyLaw(string):
 
 #Chia theo chuong
 def divChapterModifyLaw(string, startIndex) :
-	it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[a-z]|[0-9])+)", string)
+	it = re.finditer(r"(\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[a-z]|[0-9])+)", string)
 	chapterIndex = [] #chuoi cac index bat dau cua cac chapter
 	listChaps = []
 	a = lenIterator(it)
 	if  a >0:
-		it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[a-z]|[0-9])+)", string)
+		it = re.finditer(r"(\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[a-z]|[0-9])+)", string)
 		for match in it:
 			chapterIndex.append(match.span()[0])
 		for j in range(0,len(chapterIndex)):
@@ -791,12 +791,12 @@ def divChapterModifyLaw(string, startIndex) :
 
 #Chia theo muc
 def divSectionModifyLaw(string, startIndex):
-	it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\"|\.)*(Mục|MỤC)\s([A-Z]|[a-z]|[0-9])+)", string)
+	it = re.finditer(r"(\n(\*|\s|\#|\_|\“|\"|\.)*(Mục|MỤC)\s([A-Z]|[a-z]|[0-9])+)", string)
 	sectionIndex = []
 	listSecs = []
 	a = lenIterator(it)
 	if a>0:
-		it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\"|\.)*(Mục|MỤC)\s([A-Z]|[a-z]|[0-9])+)", string)
+		it = re.finditer(r"(\n(\*|\s|\#|\_|\“|\"|\.)*(Mục|MỤC)\s([A-Z]|[a-z]|[0-9])+)", string)
 		for match in it:
 			sectionIndex.append(match.span()[0])
 		for j in range(0,len(sectionIndex)):
@@ -856,12 +856,12 @@ def divSectionModifyLaw(string, startIndex):
 #chia theo dieu
 #dont need change name variable
 def divLawModifyLaw(string,startIndex):
-	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*Điều [0-9]+(\w|Đ|đ)*", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_|\“|\"|\.)*Điều [0-9]+(\w|Đ|đ)*", string)
 	sectionIndex = []
 	listSecs = []
 	a = lenIterator(it)
 	if a>0:
-		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*Điều [0-9]+(\w|Đ|đ)*", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_|\“|\"|\.)*Điều [0-9]+(\w|Đ|đ)*", string)
 		for match in it:
 			sectionIndex.append(match.span()[0]+2)
 		for j in range(0,len(sectionIndex)):
@@ -919,12 +919,12 @@ def divLawModifyLaw(string,startIndex):
 	return resultlist
 
 def divItemModifyLaw(string,startIndex) :
-	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*[0-9]+(\w|Đ|đ)*", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_|\“|\"|\.)*[0-9]+(\w|Đ|đ)*", string)
 	sectionIndex = []
 	listSecs = []
 	a = lenIterator(it)
 	if a>0:
-		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*[0-9]+(\w|Đ|đ)*", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_|\“|\"|\.)*[0-9]+(\w|Đ|đ)*", string)
 		for match in it:
 			sectionIndex.append(match.span()[0])
 		for j in range(0,len(sectionIndex)):
@@ -981,12 +981,12 @@ def divItemModifyLaw(string,startIndex) :
 	resultlist.append(a)
 	return resultlist
 def divPointModifyLaw(string,startIndex) :
-	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*(\w|đ)+(\*|\s|\#|\_|\“|\"|\.)*\)", string)
+	it = re.finditer(r"\n(\*|\s|\#|\_|\“|\"|\.)*(\w|đ)+(\*|\s|\#|\_|\“|\"|\.)*\)", string)
 	sectionIndex = []
 	listSecs = []
 	a = lenIterator(it)
 	if a>0:
-		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*(\w|đ)+(\*|\s|\#|\_|\“|\"|\.)*\)", string)
+		it = re.finditer(r"\n(\*|\s|\#|\_|\“|\"|\.)*(\w|đ)+(\*|\s|\#|\_|\“|\"|\.)*\)", string)
 		for match in it:
 			sectionIndex.append(match.span()[0])
 		for j in range(0,len(sectionIndex)):

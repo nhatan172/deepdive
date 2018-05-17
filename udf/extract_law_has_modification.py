@@ -8,17 +8,17 @@ import handle_string
 from datetime import datetime
 
 def findDate(string):
-	date_checker = re.search(r'(.(?!\\n))+ngày \d{1,2} tháng \d{1,2} năm \d{2,4}',string,re.U|re.I|re.DOTALL)
+	date_checker = re.search(r'(.(?!\n))+ngày \d{1,2} tháng \d{1,2} năm \d{2,4}',string,re.U|re.I|re.DOTALL)
 	if date_checker is not None:
 		date_match = re.search(r'ngày \d{1,2} tháng \d{1,2} năm \d{2,4}',date_checker.group(0),re.U|re.I)
 		if date_match.start() <= 30:
 			return extractDate(date_match.group(0))
-	date_checker = re.search(r'(.(?!\\n))+\d{1,2}\/\d{1,2}\/\d{2,4}',string,re.U|re.I|re.DOTALL)
+	date_checker = re.search(r'(.(?!\n))+\d{1,2}\/\d{1,2}\/\d{2,4}',string,re.U|re.I|re.DOTALL)
 	if date_checker is not None:
 		date_match = re.search(r'\d{1,2}\/\d{1,2}\/\d{2,4}',date_checker.group(0),re.U|re.I)
 		if date_match.start() <= 30:
 			return extractDate(date_match.group(0))
-	date_checker = re.search(r'(.(?!\\n))+\d{1,2}-\d{1,2}-\d{2,4}',string,re.U|re.I|re.DOTALL)
+	date_checker = re.search(r'(.(?!\n))+\d{1,2}-\d{1,2}-\d{2,4}',string,re.U|re.I|re.DOTALL)
 	if date_checker is not None:
 		date_match = re.search(r'\d{1,2}-\d{1,2}-\d{2,4}',date_checker.group(0),re.U|re.I)
 		if date_match.start() <= 30:

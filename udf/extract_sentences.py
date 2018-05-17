@@ -29,7 +29,7 @@ def extract(
     end_index   ="int",
     ):
     sent_index = 0
-    for s in content[start_index:end_index].split("\\n"):
+    for s in content[start_index:end_index].split("\n"):
         if s != "":
             it = re.finditer(r"(.(?!(\.\s)))+.{2}",s,re.I)
             lent = divlaw.lenIterator(it)
