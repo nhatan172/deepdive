@@ -349,16 +349,16 @@ function extract_link_modify_articles over(
     released_date_resources date[]
     )   returns rows like link_modify_articles
         implementation "udf/extract_link_modify_articles.py" handles tsv lines.
-# link_modify_articles += extract_link_modify_articles(doc_id,position,modify_title,released_date,ARRAY_AGG(doc_id_resources),
-# ARRAY_AGG(doc_title_resources),ARRAY_AGG(doc_symbol_resources),ARRAY_AGG(type),ARRAY_AGG(public_date)) :-  articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_),extract_modify(
-#     doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources].
-
 link_modify_articles += extract_link_modify_articles(doc_id,position,modify_title,released_date,ARRAY_AGG(doc_id_resources),
 ARRAY_AGG(doc_title_resources),ARRAY_AGG(doc_symbol_resources),ARRAY_AGG(type),ARRAY_AGG(public_date)) :-  articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_),extract_modify(
-    doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources, lower(modify_title) = lower(doc_symbol_resources); doc_id != doc_id_resources, trim(lower(modify_title)) = trim(lower(type || " " || doc_title_resources)) ].
-link_modify_articles(doc_id,position,"NA")  :-  extract_modify(
-    doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), !EXISTS[ articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_), 
-[doc_id != doc_id_resources, lower(modify_title) = lower(doc_symbol_resources); doc_id != doc_id_resources, trim(lower(modify_title)) = trim(lower(type || " " || doc_title_resources))]]. 
+    doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources].
+
+# link_modify_articles += extract_link_modify_articles(doc_id,position,modify_title,released_date,ARRAY_AGG(doc_id_resources),
+# ARRAY_AGG(doc_title_resources),ARRAY_AGG(doc_symbol_resources),ARRAY_AGG(type),ARRAY_AGG(public_date)) :-  articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_),extract_modify(
+#     doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), [doc_id != doc_id_resources, lower(modify_title) = lower(doc_symbol_resources); doc_id != doc_id_resources, trim(lower(modify_title)) = trim(lower(type || " " || doc_title_resources)) ].
+# link_modify_articles(doc_id,position,"NA")  :-  extract_modify(
+#     doc_id, position, _,_, _, _, _, _, _, _, _, _, modify_title,released_date), !EXISTS[ articles(doc_id_resources,doc_title_resources, _,  _, _, doc_symbol_resources , public_date, _, type, _,_,_,_,_,_,_,_,_,_), 
+# [doc_id != doc_id_resources, lower(modify_title) = lower(doc_symbol_resources); doc_id != doc_id_resources, trim(lower(modify_title)) = trim(lower(type || " " || doc_title_resources))]]. 
 ###################
 index_modify_positions(
     @key
@@ -401,14 +401,14 @@ function extract_index_modify_position over(
         implementation "udf/extract_index_modify_position.py" handles tsv lines.
 index_modify_positions += extract_index_modify_position(law_id , position , modified_law_id , part_modify_name , chap_modify_name , sec_modify_name , law_modify_name , item_modify_name , point_modify_name, ARRAY_AGG(part_name_sources) , ARRAY_AGG(part_index_sources) , ARRAY_AGG(chap_name_sources), ARRAY_AGG(chap_index_sources), ARRAY_AGG(sec_name_sources), ARRAY_AGG(sec_index_sources), ARRAY_AGG(law_name_sources), ARRAY_AGG(law_index_sources), ARRAY_AGG(item_name_sources), ARRAY_AGG(item_index_sources), ARRAY_AGG(point_name_sources), ARRAY_AGG(point_index_sources)) :- 
 link_modify_articles(law_id, position, modified_law_id),
-extract_modify(law_id, position , _, part_modify_name, chap_modify_name, sec_modify_name, law_modify_name, item_modify_name, point_modify_name, _, _, _, _,_), 
+extract_modify(law_id, position , type_m, part_modify_name, chap_modify_name, sec_modify_name, law_modify_name, item_modify_name, point_modify_name, _, _, _, _,_), 
 parts(modified_law_id, _, part_index_sources, _, _, part_name_sources),
 chapters(modified_law_id, part_index_sources,_,chap_index_sources, _, _, chap_name_sources),
 sections(modified_law_id, part_index_sources, chap_index_sources, _,sec_index_sources, _, _, sec_name_sources),
 laws(modified_law_id, part_index_sources, chap_index_sources, sec_index_sources, _, law_index_sources, _, _, law_name_sources, _,_),
 items(modified_law_id, part_index_sources, chap_index_sources, sec_index_sources, law_index_sources, _, item_index_sources, _, _, item_name_sources, _,_),
 points( modified_law_id, part_index_sources, chap_index_sources, sec_index_sources, law_index_sources, item_index_sources, _, point_index_sources, _, _, point_name_sources, _),
-[modified_law_id != "NA"].
+[modified_law_id != "NA",type_m > ,y,0].
 
 ##############################################
 
@@ -548,6 +548,8 @@ has_definition(mention_id) = if l > 0 then TRUE
                       else if l < 0 then FALSE
                       else NULL end :- definition_label_resolved(mention_id, l).
 
+@weight(-5)
+has_definition(id) :- definition_features(id,"SENTENCE_HAVE_FORBIDDEN_WORD").
 @weight(f)
 has_definition(id) :- definition_features(id,f).
 

@@ -66,6 +66,8 @@ def re_index(pos_tags,tokens,begin_index, end_index):
             break
     return end_index
 def replace_underscore(string):
+    if string is None:
+        return None
 	s = to_unicode(string)
 	s = s.lower()
 	s = s.replace("_"," ")
@@ -93,17 +95,20 @@ def getNumericalSymbol(sentence_text) :
         return sentence_text[i.span()[0]:i.span()[1]]
     return None
 def toLowerCase(string):
-    s = to_unicode(string)
-    s = s.lower()
-    s = s.encode('utf-8')
-    return s
+    if string is not None:
+        s = to_unicode(string)
+        s = s.lower()
+        s = s.encode('utf-8')
+        return s
+    else:
+        return ''
 def toUpperCase(string):
     s = to_unicode(string)
     s = s.upper()
     s = s.encode('utf-8')
     return s
 def standardString(string):
-    return toLowerCase(string.strip())
+    return (toLowerCase(string)).strip()
     # s = to_unicode(string)
     # match = re.finditer(r"[0-9]", s)
     # for i in match:

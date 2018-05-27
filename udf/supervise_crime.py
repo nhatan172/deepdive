@@ -8,7 +8,7 @@ import os, sys
 import divlaw
 import handle_string
 
-CrimeLabel = namedtuple('CrimeLabel', 'p_id, label, type')
+CrimeLabel = namedtuple('CrimeLabel', 'mention_id, label, type')
 
 
 @tsv_extractor

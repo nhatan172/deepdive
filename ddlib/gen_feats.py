@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding:utf8 -*-
 #
 # This file contains the generic features library that is included with ddlib.
 #
@@ -543,6 +544,9 @@ def get_seq_definition_features(sentence, span1, span2, length_bin_size=5):
         yield f
     for dict_indicator_feat in _get_dictionary_indicator_features(sentence, span1):
         yield dict_indicator_feat
+    yield get_forbidden_word(sentence, temp_span, span1)
+    for f  in get_ver_def_feature(sentence,span1):
+        yield f 
 # def _get_length_span_feature(span):
 #     if (span.length < 10) :
 #         yield "LENGTH_SPAN_SHORT_TRUE"
@@ -552,6 +556,62 @@ def get_seq_definition_features(sentence, span1, span2, length_bin_size=5):
 #         yield "LENGTH_SPAN_LONG_TRUE"
 #     else :
 #         yield "LENGTH_SPAN_LONG_FALSE"
+def get_forbidden_word(sentence, span, span1) :
+    forbidden_word = ["nếu","đối_với","trường_hợp","phải","đó","không","được","đã","đồng_thời","cần", "chỉ",'cụ_thể']
+    f2 = ["đối_với","trường_hợp","nếu"]
+    sent = ""
+    sent_exp = " ".join(materialize_span(sentence, span1, lambda x: x.word))
+    sent_exp = toLowerCase(sent_exp)
+    try:
+        for i in {1,2,3}:
+            token = str(sentence[span1.begin_word_id +length - i].word)
+            sent += toLowerCase(token) + ' '
+    except IndexError:
+        pass
+    try:
+        for i in {1,2,3}:
+            token = str(sentence[span.begin_word_id + i].word)
+            sent += toLowerCase(token) + ' '
+    except IndexError:
+        pass
+    for i in forbidden_word:
+        if i in sent:
+            return "SENTENCE_HAVE_FORBIDDEN_WORD"
+    for i in f2:
+        if i in sent_exp:
+            return "SENTENCE_HAVE_FORBIDDEN_WORD"
+    return "SENTENCE_HAVE_CLEAR"
+def _get_window_features1 (sentence, span1, span2, window=3, combinations=True, isolated=True):
+
+    left_pos = []
+    right_pos = []
+    try:
+        for i in range(1, window + 1):
+            pos = str(sentence[span1.begin_word_id + span1.length - i].pos)
+            left_pos.append(pos)
+    except IndexError:
+        pass
+    left_pos.reverse()
+    try:
+        for i in range(1, window + 1):
+            pos = str(sentence[span2.begin_word_id + i].pos)
+            right_pos.append(pos)
+    except IndexError:
+        pass
+    if isolated:
+        for i in range(len(left_pos)):
+            yield "W_LEFT_" + str(i+1) + "_[" + " ".join(left_pos[-i-1:]) + \
+                "]"
+        for i in range(len(right_pos)):
+            yield "W_RIGHT_" + str(i+1) + "_[" + " ".join(right_pos[:i+1]) +\
+                "]"
+    if combinations:
+        for i in range(len(left_pos)):
+            curr_left_pos = " ".join(left_pos[-i-1:])
+            for j in range(len(right_pos)):
+                curr_right_pos = " ".join(right_pos[:j+1])
+                yield "W_POS_L_" + str(i+1) + "_R_" + str(j+1) + "_[" + \
+                    curr_left_pos + "]_[" + curr_right_pos + "]"
 
 def _get_length_span_feature_2(span):
     if (span.length < 10) :
@@ -571,7 +631,7 @@ def _get_last_pos_features(sentence,span):
 def _get_relation_token_feature(sentence,span1,span2):
     try:
         for i in {1, 2}:
-            token = str(sentence[span2.begin_word_id - i - 1].word)
+            token = str(sentence[span1.begin_word_id - i - 1].word)
             yield "LEFT_TOKEN_" + str(i) + '_' + toLowerCase(token)
     except IndexError:
         pass
@@ -581,6 +641,15 @@ def _get_relation_token_feature(sentence,span1,span2):
             yield "RIGHT_TOKEN_" + str(i) + '_' + toLowerCase(token)
     except IndexError:
         pass
+def get_ver_def_feature(sentence,span):
+    sum = 1
+    try:
+        for i in range(0,span.length) :
+            if sentence[span.begin_word_id +i].pos != 'V':
+                yield "DEF_VERB_SUM_" + str(sum)
+                sum += 1
+    except IndexError:
+        pass   
 
 def get_generic_def_mention(sentence, span, length_bin_size=5):
     
@@ -634,17 +703,21 @@ def _get_first_pos_features(sentence,span1, span2):
 def _get_same_token_definition_feature(sentence,span1,span2):
     definition = " ".join(map(lambda x: str(x.word), sentence[span2.begin_word_id:span2.begin_word_id+span2.length]))
     definition = toLowerCase(definition)
-    for i in range(0,5) :
+    forbidden_word = [ "nếu","đối_với","trường_hợp","phải","đó","không","được","đã","đồng_thời","cần", "chỉ",'cụ_thể']
+    for i in range(0,3) :
         if i < span1.length:
-            if (toLowerCase(sentence[span1.begin_word_id +i].word) in definition) and (sentence[span1.begin_word_id +i].pos != 'F') :
+            if (toLowerCase(sentence[span1.begin_word_id +i].word) in definition) and (sentence[span1.begin_word_id +i].pos != 'F') and (toLowerCase(sentence[span1.begin_word_id +i].word) not in forbidden_word) :
                 yield "TOKEN_" +str(i+1) +"_IN_EXPL"
             else :
                 yield "TOKEN_" +str(i+1) +"_NOT_IN_EXPL"
 def is_candidate(sentence,span1,span2) :
     checking_text = " ".join(map(lambda x: str(x.word), sentence[span2.begin_word_id:span2.begin_word_id+span2.length]))
     checking_text = toLowerCase(checking_text)
+    forbidden_word = ["nếu","phải","đối_với","trường_hợp","đó","không","được","đã","đồng_thời","cần", "chỉ",'cụ_thể']
     for i in range(0,span1.length) :
         if sentence[span1.begin_word_id +i].pos != 'F':
+            if toLowerCase(sentence[span1.begin_word_id +i].word) in forbidden_word:
+                return False
             for j in str.split(sentence[span1.begin_word_id+i].word,"_") :
                 if j is not None and isAlpha(j) and j != '' :
                     if toLowerCase(j) in checking_text:

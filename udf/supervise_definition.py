@@ -26,8 +26,8 @@ def extract(
 	
 	forbidden_word = ["nếu","phải","đó","không","được","đã","đồng_thời","cần", "chỉ",'cụ_thể'] 
 	for i in range(2):
-		if end_exp +2 +i <= end_explain:
-			if handle_string.toLowerCase(tokens[end_exp+2+i]) in forbidden_word:
+		if begin_explain + i <= end_explain:
+			if handle_string.toLowerCase(tokens[begin_explain + i]) in forbidden_word:
 				yield [
 				mention_id,
 				-10,
@@ -49,8 +49,26 @@ def extract(
 	if ("nếu" in tokens[begin_exp:end_exp]) or ("Nếu" in tokens[begin_exp:end_exp]):
 		yield [
 		mention_id,
-		-1,
+		-4,
 		"forbidden_word_3"
+		]
+	if ("đối_với" in tokens[begin_exp:end_exp]) or ("Đối_với" in tokens[begin_exp:end_exp]):
+		yield [
+		mention_id,
+		-4,
+		"forbidden_word_4"
+		]
+	if ("trường_hợp" in tokens[begin_exp:end_exp]) or ("Trường_hợp" in tokens[begin_exp:end_exp]):
+		yield [
+		mention_id,
+		-4,
+		"forbidden_word_5"
+		]
+	if (':' in tokens[begin_explain:end_explain]) :
+		yield [
+		mention_id,
+		-4,
+		"forbidden_word_6"
 		]
 	i = len(mention_id) - 1
 	first = False

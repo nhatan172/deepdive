@@ -25,11 +25,10 @@
 # cd ../../
 # deepdive redo phrases
 # deepdive redo content_phrases
-# deepdive redo sentence
+# deepdive redo sentences
 
 
 deepdive redo legal_penalty_mention
-deepdive redo legal_penalty_feature
 deepdive redo legal_penalty_feature
 deepdive redo legal_penalty_label
 deepdive redo has_legal_penalty
